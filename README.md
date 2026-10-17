@@ -15,14 +15,14 @@
 - **模式**：苏格拉底式单点反诘，禁直给代码答案，逼迫推导源码到 ELF 目标文件、虚拟内存与寄存器操作物理突变。
 - **存储**：本地优先（Local-First），会话独立持久化，打卡与推导支持纯文本 Markdown + YAML FrontMatter 本地落盘。
 
-### 最新发布 (v1.0.0)
+### 最新发布 (v1.0.1)
 
 | 平台 | 安装包下载 | 规格与环境 |
 | :--- | :--- | :--- |
-| **Android** | [absolute-moment-android.apk](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-android.apk) | 55MB · 支持 Android 10+ (arm64/v7a/x64) |
-| **iOS** | [absolute-moment-ios-release.ipa](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-ios-release.ipa) | 8MB · 支持 iOS 15+ (TrollStore / 签名直装) |
-| **macOS** | [absolute-moment-macos-arm64.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-macos-arm64.zip) | 19MB · Apple Silicon 原生 App (解压即用) |
-| **Web** | [absolute-moment-web.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-web.zip) | 14MB · 静态 Web 部署包 |
+| **Android** | [absolute-moment-android.apk](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.1/absolute-moment-android.apk) | 55MB · 支持 Android 10+ (arm64/v7a/x64) |
+| **iOS** | [absolute-moment-ios-release.ipa](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.1/absolute-moment-ios-release.ipa) | 8MB · 支持 iOS 15+ (TrollStore / 签名直装) |
+| **macOS** | [absolute-moment-macos-arm64.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.1/absolute-moment-macos-arm64.zip) | 19MB · Apple Silicon 原生 App (解压即用) |
+| **Web** | [absolute-moment-web.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.1/absolute-moment-web.zip) | 14MB · 静态 Web 部署包 |
 | **Docker / Package** | [ghcr.io/dstweihao/dst-absolute-moment-app](https://github.com/dstweihao/dst-absolute-moment-app/packages) | GitHub Packages 容器镜像 · `docker run -d -p 8080:80 ghcr.io/dstweihao/dst-absolute-moment-app:latest` |
 | **Linux** | GitHub Actions 自动构建 | [CI/CD 自动化构建 x64 发布包](https://github.com/dstweihao/dst-absolute-moment-app/actions) |
 
