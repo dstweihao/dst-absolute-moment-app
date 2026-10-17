@@ -60,6 +60,7 @@ key.properties
 # Release bundles
 /release_macos/
 /release_web/
+/release_packages/
 
 # Scratch & local temp
 scratch/

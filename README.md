@@ -15,6 +15,14 @@
 - **模式**：苏格拉底式单点反诘，禁直给代码答案，逼迫推导源码到 ELF 目标文件、虚拟内存与寄存器操作物理突变。
 - **存储**：本地优先（Local-First），会话独立持久化，打卡与推导支持纯文本 Markdown + YAML FrontMatter 本地落盘。
 
+### 最新发布 (v1.0.0)
+
+| 平台 | 安装包下载 | 规格与环境 |
+| :--- | :--- | :--- |
+| **Android** | [absolute-moment-android.apk](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-android.apk) | 55MB · 支持 Android 10+ (arm64/v7a/x64) |
+| **macOS** | [absolute-moment-macos-arm64.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-macos-arm64.zip) | 19MB · Apple Silicon 原生 App (解压即用) |
+| **Web** | [absolute-moment-web.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-web.zip) | 14MB · 静态 Web 部署包 |
+
 ---
 
 ## 核心痛点
