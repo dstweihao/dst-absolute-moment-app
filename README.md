@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/icon/icon.png" width="128" height="128" alt="绝对时刻 Logo" />
-</p>
-
 # 绝对时刻 (Absolute Moment)
 
 > 基于 Flutter 的现代 C++ 交互式推导工作台。集成 DeepSeek V3 / R1 苏格拉底单点反诘引擎，单关攻坚，闭环推导汇编、内存与系统调用。
@@ -9,6 +5,11 @@
 ---
 
 ## 项目简介
+
+<p align="center">
+  <img src="assets/icon/icon.png" width="112" height="112" alt="绝对时刻 Logo" /><br />
+  <sub>绝对时刻</sub>
+</p>
 
 - **定位**：跨平台（macOS / Linux / Windows / Web）现代 C++ 底层推导工作台。
 - **模式**：苏格拉底式单点反诘，禁直给代码答案，逼迫推导源码到 ELF 目标文件、虚拟内存与寄存器操作物理突变。
