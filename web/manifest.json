@@ -5,7 +5,7 @@
     "display": "standalone",
     "background_color": "#165DFF",
     "theme_color": "#165DFF",
-    "description": "绝对时刻 · 现代 C++ 交互式推导工作台",
+    "description": "绝对时刻 · 像闯关打怪一样学现代 C++，内置不喂饭的 AI 导师，带你真正推导吃透底层机制",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
