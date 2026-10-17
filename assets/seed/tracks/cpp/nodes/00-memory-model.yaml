@@ -1,0 +1,21 @@
+id: "00-memory-model"
+title: "对象生命周期"
+progress_range: [32, 35]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 17
+description: >
+  栈与堆在内存层面的本质差别。这一关只讲静态作用域生命周期的物理边界。
+core_concepts:
+  - "栈对象随栈帧弹出立即销毁，返回栈上局部变量的指针或引用必然构成悬垂"
+socratic_questions:
+  - id: Q0_dangling_ret
+    level: "悬垂返回"
+    text: "在函数中返回 int& ref 绑定局部变量，调用方偶尔能读出正确值，但为何这是严重的未定义行为？"
+interception:
+  minimum_pass_line: "能指出函数返回时栈帧被作废，局部变量内存可能被后续调用随时覆盖"
+  on_failure: "AI 演示栈帧被新调用覆盖覆盖导致数据错乱的动态过程，通过后回归本节点"
+acceptance_criteria:
+  - "能杜绝任何返回局部对象引用或指针的代码缺陷"
+next_node: "01-object-layout"
+prerequisites: ["b14-destructor"]

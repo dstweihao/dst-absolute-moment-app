@@ -1,0 +1,21 @@
+id: "b11-vector"
+title: "动态数组 vector"
+progress_range: [24, 26]
+phase: 1
+phase_name: "C++ 基础"
+order: 13
+description: >
+  std::vector 维护连续内存。这一关只讲倍增扩容导致的迭代器失效。
+core_concepts:
+  - "vector 在容量不足时整块搬家并倍增扩容，导致原有指针和迭代器全部失效"
+socratic_questions:
+  - id: Q0_vector_inval
+    level: "迭代器失效"
+    text: "在遍历 std::vector 的循环体内执行 push_back，为什么程序会神秘崩溃？"
+interception:
+  minimum_pass_line: "能说出 push_back 触发搬家后，循环迭代器指向已释放的旧内存"
+  on_failure: "AI 演示 vector 扩容搬迁后旧缓冲区释放过程，通过后回归本节点"
+acceptance_criteria:
+  - "能指出 vector 扩容触发迭代器失效的时序并在代码中规避"
+next_node: "b12-class"
+prerequisites: ["b10-string"]

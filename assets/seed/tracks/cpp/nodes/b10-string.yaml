@@ -1,0 +1,21 @@
+id: "b10-string"
+title: "字符串"
+progress_range: [22, 24]
+phase: 1
+phase_name: "C++ 基础"
+order: 12
+description: >
+  std::string 自主管理字符缓冲区。这一关只讲连续动态缓冲区与扩容失效。
+core_concepts:
+  - "std::string 内部动态分配连续字符缓冲区，扩容时重新分配导致旧 c_str() 指针失效"
+socratic_questions:
+  - id: Q0_string_inval
+    level: "缓冲区生命周期"
+    text: "const char* p = s.c_str(); 随后向 s 追加超长字符串，此时再读取 p 会怎样？"
+interception:
+  minimum_pass_line: "能说出 string 扩容重新分配堆内存，旧 c_str 指针沦为悬垂指针"
+  on_failure: "AI 用堆内存重新分配图演示悬垂指针的产生，通过后回归本节点"
+acceptance_criteria:
+  - "能解释 string 扩容机制并说明为何持久保存 c_str() 结果是危险的"
+next_node: "b11-vector"
+prerequisites: ["f03-const"]

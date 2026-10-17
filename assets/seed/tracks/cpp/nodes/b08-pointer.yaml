@@ -1,0 +1,21 @@
+id: "b08-pointer"
+title: "指针"
+progress_range: [16, 18]
+phase: 1
+phase_name: "C++ 基础"
+order: 9
+description: >
+  指针保存内存地址。这一关只讲取地址、解引用以及空指针解引用的致命后果。
+core_concepts:
+  - "指针变量存储内存地址；解引用未初始化指针或 nullptr 引发未定义行为崩溃"
+socratic_questions:
+  - id: Q0_nullptr_deref
+    level: "指针解引用"
+    text: "int* p = nullptr; 紧接着 *p = 10; 编译器能查出来吗？运行时操作系统如何干预？"
+interception:
+  minimum_pass_line: "能说清指针仅存地址，解引用非法地址将触发页错误信号导致进程崩溃"
+  on_failure: "AI 演示空指针解引用引发段错误（SIGSEGV）的物理过程，通过后回归本节点"
+acceptance_criteria:
+  - "能准确使用 & 取地址与 * 解引用，并在操作前判空"
+next_node: "b09-reference"
+prerequisites: ["b07-parameter-passing"]

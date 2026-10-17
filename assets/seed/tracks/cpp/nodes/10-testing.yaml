@@ -1,0 +1,21 @@
+id: "10-testing"
+title: "自动化测试"
+progress_range: [86, 90]
+phase: 4
+phase_name: "工程实践"
+order: 33
+description: >
+  单元测试与模糊测试。这一关只讲模糊测试如何撞出边界隐患。
+core_concepts:
+  - "模糊测试基于覆盖率引导自动变异海量异常输入，撞击未考虑到的边界状态与内存异常"
+socratic_questions:
+  - id: Q0_fuzz_catch
+    level: "模糊测试"
+    text: "即使单元测试覆盖率达到 100%，模糊测试（Fuzzing）依然能揪出解析器的致命 Bug，它是如何做到的？"
+interception:
+  minimum_pass_line: "能指出单测只覆盖编写者预设的用例，模糊测试通过随机变异构造出人工难以想象的畸形输入"
+  on_failure: "AI 演示 libFuzzer 捕获溢出输入的实际运行过程，通过后回归本节点"
+acceptance_criteria:
+  - "能为核心解析模块编写单元测试与模糊测试入口"
+next_node: "11-networking"
+prerequisites: ["09-build-cmake"]

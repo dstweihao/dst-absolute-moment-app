@@ -1,0 +1,21 @@
+id: "06-async-event-loop"
+title: "异步事件循环"
+progress_range: [66, 70]
+phase: 3
+phase_name: "并发编程"
+order: 28
+description: >
+  非阻塞 I/O 与 coroutine 协程框架。这一关只讲事件通知与协程挂起机制。
+core_concepts:
+  - "基于 coroutine 与 io_uring 的异步事件循环将阻塞操作转为挂起，唤醒后继续执行而不占用系统线程"
+socratic_questions:
+  - id: Q0_coroutine_loop
+    level: "协程异步"
+    text: "在现代高性能网络引擎中，io_uring 配合 C++20 coroutine 相比多线程阻塞 I/O 带来了哪些性能优势？"
+interception:
+  minimum_pass_line: "能指出单线程事件循环无上下文切换开销，io_uring 批量下发系统调用减少陷入内核"
+  on_failure: "AI 画出协程在事件循环中挂起与唤醒的状态时序图，通过后回归本节点"
+acceptance_criteria:
+  - "能说清非阻塞 I/O 事件循环与协程协作的核心运转流程"
+next_node: "07-lockfree-memory-order"
+prerequisites: ["05-threads-sync"]

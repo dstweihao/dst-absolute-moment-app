@@ -1,0 +1,21 @@
+id: "c04-smart-pointers"
+title: "智能指针"
+progress_range: [50, 53]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 23
+description: >
+  unique_ptr 与 shared_ptr。这一关只讲独占所有权语义。
+core_concepts:
+  - "std::unique_ptr 独占堆对象所有权且禁止拷贝，转移必须依赖移动语义"
+socratic_questions:
+  - id: Q0_unique_ownership
+    level: "独占所有权"
+    text: "std::unique_ptr 为什么显式删除了拷贝构造函数？若需要转让所有权该如何操作？"
+interception:
+  minimum_pass_line: "能说清独占语义禁止副本存在，必须通过 std::move 显式转让资源指针"
+  on_failure: "AI 画出 unique_ptr 所有权移动转移的前后状态图，通过后回归本节点"
+acceptance_criteria:
+  - "能优先选用 unique_ptr 管理动态对象并在适当时机使用 std::move"
+next_node: "c05-templates"
+prerequisites: ["02-raii"]

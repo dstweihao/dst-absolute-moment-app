@@ -1,0 +1,21 @@
+id: "05-threads-sync"
+title: "线程生命周期"
+progress_range: [62, 66]
+phase: 3
+phase_name: "并发编程"
+order: 27
+description: >
+  多线程并发与 jthread。这一关只讲线程对象的 joinable 状态与析构终止。
+core_concepts:
+  - "std::thread 析构时若处于 joinable 状态将直接触发 std::terminate，C++20 的 jthread 在析构时自动请求停止并 join"
+socratic_questions:
+  - id: Q0_jthread_raii
+    level: "RAII 线程"
+    text: "为什么使用普通 std::thread 很容易导致崩溃，C++20 的 jthread 做了什么改进消除这一隐患？"
+interception:
+  minimum_pass_line: "能说出 thread 析构未 join 将导致 terminate，jthread 析构时自动 join 兜底"
+  on_failure: "AI 演示未 join 的线程在主线程提前退出时的崩溃机制，通过后回归本节点"
+acceptance_criteria:
+  - "能熟练使用 jthread 管理异步执行流避免悬垂并发"
+next_node: "06-async-event-loop"
+prerequisites: ["04-modern-frontier"]

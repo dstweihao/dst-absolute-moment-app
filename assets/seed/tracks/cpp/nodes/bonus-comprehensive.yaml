@@ -1,0 +1,22 @@
+id: "bonus-comprehensive"
+title: "综合实战：从零搭建一个高并发服务"
+progress_range: [100, 105]
+phase: 5
+phase_name: "系统编程"
+order: 38
+is_bonus: true
+description: >
+  融会贯通现代 C++ 与底层网络机制。这一关只讲系统级综合工程架构落地。
+core_concepts:
+  - "系统工程能力：将 RAII 内存管理、无锁并发模型、非阻塞 I/O 与可靠协议解析整合成生产级服务"
+socratic_questions:
+  - id: Q0_architecture
+    level: "系统架构"
+    text: "从零设计一个支持十万并发连接的 C++ 基础网络服务，说出你在内存分配、线程模型、I/O 多路复用和防御性异常上的权衡与选择？"
+interception:
+  minimum_pass_line: "能系统性阐明架构各分层的选型权衡，并给出内存安全与高吞吐的自洽论证"
+  on_failure: "AI 剖析成熟高性能网络引擎骨架并引导逐层完善，通过后回归本节点"
+acceptance_criteria:
+  - "能独立实现一个具备完善内存安全、稳定并发通信与优雅退出的高性能网络服务器骨架"
+next_node: null
+prerequisites: ["14-performance-cache"]

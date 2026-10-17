@@ -1,0 +1,21 @@
+id: "b05-scope"
+title: "作用域"
+progress_range: [10, 12]
+phase: 1
+phase_name: "C++ 基础"
+order: 6
+description: >
+  花括号决定了变量的可见性与死生。这一关只讲块作用域遮蔽效应。
+core_concepts:
+  - "内层作用域的同名变量遮蔽外层变量，离开花括号内层变量生命周期立即结束"
+socratic_questions:
+  - id: Q0_shadowing
+    level: "遮蔽"
+    text: "外层定义了 int x = 10，if 块里又写了 int x = 20，修改内层 x 会影响外层吗？出了花括号 x 是几？"
+interception:
+  minimum_pass_line: "能说清作用域嵌套遮蔽机制，内层变量离开花括号销毁不影响外层"
+  on_failure: "AI 演示栈帧内变量遮蔽图解，通过后回归本节点"
+acceptance_criteria:
+  - "能准确预测多层花括号作用域下同名变量的可见性与取值"
+next_node: "b06-function"
+prerequisites: ["b04-control-flow"]

@@ -1,0 +1,21 @@
+id: "12-design-patterns"
+title: "设计模式"
+progress_range: [94, 96]
+phase: 5
+phase_name: "系统编程"
+order: 35
+description: >
+  依赖倒置与组合解耦。这一关只讲面向接口设计如何消灭模块硬编码依赖。
+core_concepts:
+  - "高层业务模块依赖抽象纯虚接口而非具体实现，通过依赖注入提升可测试性与模块替换弹性"
+socratic_questions:
+  - id: Q0_dip_injection
+    level: "接口解耦"
+    text: "如果业务服务类直接包含底层网络通信类，进行单元测试时将产生什么灾难？如何用纯虚接口倒置依赖？"
+interception:
+  minimum_pass_line: "能说明直接硬依赖导致无法隔离网络做单测，依赖纯虚接口后可注入 Mock 对象进行独立测试"
+  on_failure: "AI 给出硬编码耦合与依赖注入架构重构对比图，通过后回归本节点"
+acceptance_criteria:
+  - "能用纯虚类设计抽象接口并实现依赖注入解耦"
+next_node: "13-processes-system"
+prerequisites: ["11-networking"]

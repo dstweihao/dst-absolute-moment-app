@@ -1,0 +1,21 @@
+id: "c01-copy-semantics"
+title: "拷贝语义"
+progress_range: [38, 41]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 19
+description: >
+  浅拷贝与深拷贝的分野。这一关只讲浅拷贝在持有指针资源时导致双重释放。
+core_concepts:
+  - "赋值运算符重载必须防范自我赋值：先释放旧资源再拷贝将导致读取已被释放的野指针"
+socratic_questions:
+  - id: Q0_double_free
+    level: "双重释放"
+    text: "如果写 a = a 进行自我赋值，一个先 delete[] 再 new 的赋值运算符实现会坏在哪一步？"
+interception:
+  minimum_pass_line: "能指出自我赋值若先销毁自身资源将导致读取悬垂指针，并说明 Copy-and-Swap 如何化解"
+  on_failure: "AI 演示双对象指向同块堆内存并在析构时冲突的示意图，通过后回归本节点"
+acceptance_criteria:
+  - "能编写防范自我赋值的安全赋值运算符并解释其物理机制"
+next_node: "c02-move-semantics"
+prerequisites: ["01-object-layout"]

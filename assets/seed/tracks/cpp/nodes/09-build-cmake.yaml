@@ -1,0 +1,21 @@
+id: "09-build-cmake"
+title: "构建系统"
+progress_range: [82, 86]
+phase: 4
+phase_name: "工程实践"
+order: 32
+description: >
+  现代 CMake 与 CMakePresets 配置。这一关只讲基于 Target 的现代依赖传递机制。
+core_concepts:
+  - "使用 target_link_libraries 并利用 CMakePresets 固化环境，消灭全局脏变量并明确依赖传递边界"
+socratic_questions:
+  - id: Q0_modern_cmake
+    level: "Target 依赖"
+    text: "全局 include_directories 为什么是过时且危险的，target_include_directories 的 PUBLIC/PRIVATE 有何本质区别？"
+interception:
+  minimum_pass_line: "能说明 PUBLIC 会将包含路径传递给依赖方，PRIVATE 仅内部可见避免头文件污染"
+  on_failure: "AI 画出现代 CMake 模块依赖传递树状图，通过后回归本节点"
+acceptance_criteria:
+  - "能编写规范的 CMakeLists.txt 并用 CMakePresets 管理跨平台编译目标"
+next_node: "10-testing"
+prerequisites: ["08-debugging-profiling"]

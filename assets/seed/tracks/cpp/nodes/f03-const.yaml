@@ -1,0 +1,21 @@
+id: "f03-const"
+title: "const 常量"
+progress_range: [20, 22]
+phase: 1
+phase_name: "C++ 基础"
+order: 11
+description: >
+  const 是写进类型系统里的只读契约。这一关只讲编译期防线与常量指针语义。
+core_concepts:
+  - "const 是编译期类型约束：阻止意外修改，配合引用可实现零开销只读传参"
+socratic_questions:
+  - id: Q0_const_ref
+    level: "只读约束"
+    text: "为什么函数参数推荐传 const T& 而不是直接传 T？它同时带来了哪两点收益？"
+interception:
+  minimum_pass_line: "能说出 const T& 既避免了拷贝开销，又由编译期防止了函数内部意外修改实参"
+  on_failure: "AI 演示非 const 意外赋值引发 bug 的场景，通过后回归本节点"
+acceptance_criteria:
+  - "能正确区分指向常量的指针与常量指针，并熟练使用 const T& 参数"
+next_node: "b10-string"
+prerequisites: ["b09-reference"]

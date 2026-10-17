@@ -1,0 +1,21 @@
+id: "c05-templates"
+title: "模板基础"
+progress_range: [53, 56]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 24
+description: >
+  编译期代码生成机制。这一关只讲模板实例化发生在编译期而非运行期。
+core_concepts:
+  - "模板按具体类型在编译期具现化独立二进制代码，故模板定义通常必须写在头文件暴露给使用方"
+socratic_questions:
+  - id: Q0_template_inst
+    level: "编译期实例化"
+    text: "把模板声明在 .h 里、实现写在 .cpp 里，为什么调用时会报 undefined reference 链接错误？"
+interception:
+  minimum_pass_line: "能说出编译单元独立编译时无法得知外部实例化的具体类型，链接期缺失符号"
+  on_failure: "AI 用两阶段编译模型解释模板符号具现化过程，通过后回归本节点"
+acceptance_criteria:
+  - "能编写函数模板并正确在头文件中组织模板定义"
+next_node: "03-modern-cpp"
+prerequisites: ["c04-smart-pointers"]

@@ -1,0 +1,21 @@
+id: "13-processes-system"
+title: "进程隔离"
+progress_range: [96, 98]
+phase: 5
+phase_name: "系统编程"
+order: 36
+description: >
+  多进程内存保护与信号处理。这一关只讲异步信号安全函数的调用红线。
+core_concepts:
+  - "信号处理函数异步打断主线程上下文，内部绝不可调用 printf、malloc 等非异步信号安全函数"
+socratic_questions:
+  - id: Q0_signal_safety
+    level: "信号安全"
+    text: "在捕获 SIGINT 的信号处理器里调用 malloc 分配内存可能导致整个进程瞬间死锁，原因是什么？"
+interception:
+  minimum_pass_line: "能说出信号可能打断持有内存分配锁的临界区，内部再次调用 malloc 会导致自死锁"
+  on_failure: "AI 演示信号打断锁操作导致死锁的时序图，通过后回归本节点"
+acceptance_criteria:
+  - "能在信号处理函数中仅做原子标志置位并在主循环安全响应"
+next_node: "14-performance-cache"
+prerequisites: ["12-design-patterns"]

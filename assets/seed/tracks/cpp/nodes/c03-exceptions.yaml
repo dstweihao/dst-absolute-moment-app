@@ -1,0 +1,21 @@
+id: "c03-exceptions"
+title: "异常处理"
+progress_range: [44, 47]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 21
+description: >
+  栈展开与异常安全。这一关只讲异常沿调用栈传播时局部对象的自动清理。
+core_concepts:
+  - "栈展开期间析构函数若抛出未捕获异常，C++ 运行时将直接调用 std::terminate 强制终止进程"
+socratic_questions:
+  - id: Q0_unwind
+    level: "栈展开安全"
+    text: "在函数抛出异常进行栈展开的途中，某个局部对象的析构函数里又抛出新异常，操作系统会怎么处置？"
+interception:
+  minimum_pass_line: "能指出双重异常活跃状态下标准规定直接 terminate 终止进程，故析构函数绝不可抛出异常"
+  on_failure: "AI 演示多层函数异常抛出与栈展开析构流程图，通过后回归本节点"
+acceptance_criteria:
+  - "能说清析构函数抛出异常引发程序终止的致命机制并确保析构不抛异常"
+next_node: "02-raii"
+prerequisites: ["c02-move-semantics"]

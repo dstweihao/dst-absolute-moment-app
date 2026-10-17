@@ -1,0 +1,21 @@
+id: "01-object-layout"
+title: "对象的内存布局"
+progress_range: [35, 38]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 18
+description: >
+  结构体内存对齐与填充。这一关只讲字节对齐如何影响 sizeof。
+core_concepts:
+  - "硬件对齐要求编译器在结构体字段间插入 padding 字节，调整声明顺序可减小对象体积"
+socratic_questions:
+  - id: Q0_padding
+    level: "内存对齐"
+    text: "struct A { char c; int i; char d; }; 为什么 sizeof 是 12 而不是 6？"
+interception:
+  minimum_pass_line: "能指出 int 需要 4 字节自然对齐，编译器在字段后填充了 padding 字节"
+  on_failure: "AI 逐字节画出结构体内部布局格子图，通过后回归本节点"
+acceptance_criteria:
+  - "能通过重排字段声明顺序将结构体体积优化至最小"
+next_node: "c01-copy-semantics"
+prerequisites: ["00-memory-model"]

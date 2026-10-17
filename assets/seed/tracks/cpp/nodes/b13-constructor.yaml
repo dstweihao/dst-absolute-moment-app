@@ -1,0 +1,21 @@
+id: "b13-constructor"
+title: "构造函数"
+progress_range: [28, 30]
+phase: 1
+phase_name: "C++ 基础"
+order: 15
+description: >
+  构造函数负责将未初始化内存塑造成合法对象。这一关只讲初始化列表的不可替代性。
+core_concepts:
+  - "初始化列表在进入构造函数体之前完成成员构造，const 成员必须在此初始化"
+socratic_questions:
+  - id: Q0_ctor_init_list
+    level: "初始化列表"
+    text: "为什么 const 成员或引用成员必须写在构造函数初始化列表中，写在函数体里为何报错？"
+interception:
+  minimum_pass_line: "能说出进入构造函数体时所有成员已被默认初始化，函数体内只算赋值而非初始化"
+  on_failure: "AI 用对象内存出生时间线演示初始化列表执行时机，通过后回归本节点"
+acceptance_criteria:
+  - "能熟练使用构造函数初始化列表正确初始化常量与引用成员"
+next_node: "b14-destructor"
+prerequisites: ["b12-class"]

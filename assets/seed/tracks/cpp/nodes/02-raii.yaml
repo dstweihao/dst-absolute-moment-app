@@ -1,0 +1,21 @@
+id: "02-raii"
+title: "RAII"
+progress_range: [47, 50]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 22
+description: >
+  资源获取即初始化。这一关只讲将文件描述符或锁的生命周期绑定至栈对象。
+core_concepts:
+  - "RAII 利用栈对象离开作用域必定触发析构的机制，确保资源在正常退出或异常抛出时均被释放"
+socratic_questions:
+  - id: Q0_raii_guarantee
+    level: "RAII 确定性"
+    text: "为什么现代 C++ 严禁用裸指针配合手动 delete 管理内存，RAII 如何根治内存泄露？"
+interception:
+  minimum_pass_line: "能说出 RAII 将资源释放逻辑移入析构函数，借助编译器确定性析构闭环资源"
+  on_failure: "AI 对比手动释放与 RAII 类在提前 return 分支下的对比演示，通过后回归本节点"
+acceptance_criteria:
+  - "能封装一个管理系统句柄的 RAII 类保证资源绝对不泄露"
+next_node: "c04-smart-pointers"
+prerequisites: ["c03-exceptions"]

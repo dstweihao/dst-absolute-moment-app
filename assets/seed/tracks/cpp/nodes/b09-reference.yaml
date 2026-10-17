@@ -1,0 +1,21 @@
+id: "b09-reference"
+title: "引用"
+progress_range: [18, 20]
+phase: 1
+phase_name: "C++ 基础"
+order: 10
+description: >
+  引用是对象的别名。这一关只讲引用传递如何实现零拷贝与原位修改。
+core_concepts:
+  - "引用是已有对象的不可变别名；引用传参使函数能直接操作外部实参而无拷贝开销"
+socratic_questions:
+  - id: Q0_swap_ref
+    level: "引用别名"
+    text: "void swap(int& a, int& b) 能成功交换实参，为什么它不需要传指针就能改到外部？"
+interception:
+  minimum_pass_line: "能说出引用是原对象的语法别名，任何操作直接映射到底层实参"
+  on_failure: "AI 给出指针与引用的汇编代码对比，通过后回归本节点"
+acceptance_criteria:
+  - "能用引用参数实现双变量交换函数并说明与值传递的区别"
+next_node: "f03-const"
+prerequisites: ["b08-pointer"]

@@ -1,0 +1,21 @@
+id: "b03-variable-init"
+title: "变量初始化"
+progress_range: [4, 6]
+phase: 1
+phase_name: "C++ 基础"
+order: 3
+description: >
+  定义一个变量和给它一个值在 C++ 里是两件独立的事。这一关只讲那些没人替你清零的地方。
+core_concepts:
+  - "自动变量不被零初始化：函数体内的 int x; 拿到的是栈上的垃圾值"
+socratic_questions:
+  - id: Q0_uninitialized
+    level: "初始化"
+    text: "int x; 写在函数体里是随机的垃圾值，写成全局变量却一定是 0 —— 同一行代码，位置换了结果就变了，标准为什么要这么规定？"
+interception:
+  minimum_pass_line: "能说出自动变量默认不初始化，读取它的值是未定义行为"
+  on_failure: "AI 用内存快照演示自动变量里的垃圾值从哪里来，通过后回归本节点"
+acceptance_criteria:
+  - "能说出哪些变量会被自动零初始化，哪些不会，并说明读未初始化变量的后果"
+next_node: "f02-operators"
+prerequisites: ["b02-builtin-types"]

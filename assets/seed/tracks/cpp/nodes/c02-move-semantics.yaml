@@ -1,0 +1,21 @@
+id: "c02-move-semantics"
+title: "移动语义"
+progress_range: [41, 44]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 20
+description: >
+  右值引用与所有权转移。这一关只讲移动构造如何实现指针窃取以杜绝无谓深拷贝。
+core_concepts:
+  - "移动构造函数必须标记 noexcept：否则 vector 扩容为满足强异常安全保证将退化为逐个深拷贝"
+socratic_questions:
+  - id: Q0_move_steal
+    level: "所有权窃取"
+    text: "给类写了移动构造函数，但 vector 扩容时依然在逐个深拷贝 —— 编译器为什么拒绝使用你的移动构造？"
+interception:
+  minimum_pass_line: "能说出未标记 noexcept 的移动构造无法提供强异常安全保证，标准库容器被迫回退到深拷贝"
+  on_failure: "AI 对比拷贝与移动在堆指针转移上的时间线开销，通过后回归本节点"
+acceptance_criteria:
+  - "能解释移动构造函数标记 noexcept 对标准库容器扩容性能的决定性作用"
+next_node: "c03-exceptions"
+prerequisites: ["c01-copy-semantics"]

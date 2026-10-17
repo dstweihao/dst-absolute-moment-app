@@ -1,0 +1,21 @@
+id: "b06-function"
+title: "函数"
+progress_range: [12, 14]
+phase: 1
+phase_name: "C++ 基础"
+order: 7
+description: >
+  函数是逻辑复用的基本单元。这一关只讲栈帧压栈与递归终止。
+core_concepts:
+  - "每次函数调用都建立一个新的栈帧；递归无终止条件将耗尽栈空间引发栈溢出"
+socratic_questions:
+  - id: Q0_recursion
+    level: "调用栈"
+    text: "一个递归函数忘了写终止条件，程序直接崩溃 —— 在这之间调用栈发生了什么？"
+interception:
+  minimum_pass_line: "能说出每次调用压入栈帧、返回弹出，栈空间耗尽即引发栈溢出崩溃"
+  on_failure: "AI 用调用栈快照演示递归展开到溢出的全过程，通过后回归本节点"
+acceptance_criteria:
+  - "能说出函数栈帧的创建与销毁时机，并解释栈溢出崩溃成因"
+next_node: "b07-parameter-passing"
+prerequisites: ["b05-scope"]

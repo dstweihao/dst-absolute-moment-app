@@ -1,0 +1,21 @@
+id: "f01-program"
+title: "第一个程序"
+progress_range: [0, 2]
+phase: 1
+phase_name: "C++ 基础"
+order: 1
+description: >
+  一个 .cpp 文件从编辑到跑起来经历了哪几步。这一关只讲这条最短路径。
+core_concepts:
+  - "main 函数是程序入口，cout 把字符串送到标准输出，g++ 把源码变成可执行文件"
+socratic_questions:
+  - id: Q0_compile
+    level: "编译运行"
+    text: "你写完 cout << 'hello' 后保存了文件，但程序还没有跑 —— 此刻发生了什么，什么时候才会有字出现在屏幕上？"
+interception:
+  minimum_pass_line: "能说出编译和运行是两个独立的步骤，main 是程序执行的起点"
+  on_failure: "AI 画出从源文件到终端输出的全链路，通过后回归本节点"
+acceptance_criteria:
+  - "能独立写出、编译、运行一个打印任意文字的 C++ 程序"
+next_node: "b02-builtin-types"
+prerequisites: []

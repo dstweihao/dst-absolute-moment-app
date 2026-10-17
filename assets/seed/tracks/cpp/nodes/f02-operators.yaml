@@ -1,0 +1,21 @@
+id: "f02-operators"
+title: "运算符"
+progress_range: [6, 8]
+phase: 1
+phase_name: "C++ 基础"
+order: 4
+description: >
+  运算符是编译器内置的计算规则。这一关只讲整数运算和类型转换中最常踩的坑。
+core_concepts:
+  - "整数除法截断小数部分：5/2 得 2 不得 2.5，类型决定运算方式"
+socratic_questions:
+  - id: Q0_int_div
+    level: "运算"
+    text: "两个 int 相除永远得 int，5 / 2 就是 2 —— 如果你需要 2.5，在哪一步介入才能让它变成浮点除法？"
+interception:
+  minimum_pass_line: "能说出整数除法的截断规则，并指出在哪里显式转换可以改变行为"
+  on_failure: "AI 列出整型除法的三个典型陷阱，通过后回归本节点"
+acceptance_criteria:
+  - "能预测任意一个混合整型和浮点型运算表达式的最终类型和值"
+next_node: "b04-control-flow"
+prerequisites: ["b03-variable-init"]

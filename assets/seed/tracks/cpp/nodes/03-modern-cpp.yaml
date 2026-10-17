@@ -1,0 +1,21 @@
+id: "03-modern-cpp"
+title: "现代 C++ 泛型约束"
+progress_range: [56, 59]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 25
+description: >
+  C++20 concepts 与 ranges 泛型约束。这一关只讲将类型约束转化为一等公民。
+core_concepts:
+  - "concepts 编译期约束替代晦涩 SFINAE，不满足约束时编译器直接指出契约不符之处"
+socratic_questions:
+  - id: Q0_concepts_error
+    level: "编译期契约"
+    text: "在 C++20 中使用 concepts 和 ranges 相比传统模板有哪些质的飞跃，尤其是报错可读性？"
+interception:
+  minimum_pass_line: "能指出 concepts 将类型检查前置在模板重载决策入口，精准报错而非海量调用栈"
+  on_failure: "AI 并排对比传统模板报错与 concepts 简洁报错信息，通过后回归本节点"
+acceptance_criteria:
+  - "能使用 concepts 编写一个要求支持特定操作符的类型约束"
+next_node: "04-modern-frontier"
+prerequisites: ["c05-templates"]

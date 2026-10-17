@@ -1,0 +1,21 @@
+id: "b02-builtin-types"
+title: "基本类型"
+progress_range: [2, 4]
+phase: 1
+phase_name: "C++ 基础"
+order: 2
+description: >
+  类型不是数据的标签，而是对同一串 0/1 的解释方式。这一关只讲内置类型到底规定了什么、又把什么留给了平台。
+core_concepts:
+  - "类型决定位模式如何被解读：char 的符号性是实现定义的，不同平台结果可以不同"
+socratic_questions:
+  - id: Q0_char_signedness
+    level: "实现定义"
+    text: "同一个 char 变量存了 200，在有的编译器上打印出 -56，换一个编译器却是 200 —— 标准明明写了 char，为什么它允许两个答案都对？"
+interception:
+  minimum_pass_line: "能说出 char 的符号性是实现定义的，标准没有规定它一定有符号还是无符号"
+  on_failure: "AI 列出各平台整型宽度对照表演示差异，通过后回归本节点"
+acceptance_criteria:
+  - "能解释为什么同一个字面量在不同编译器上打印出不同的数值是标准允许的行为"
+next_node: "b03-variable-init"
+prerequisites: ["f01-program"]

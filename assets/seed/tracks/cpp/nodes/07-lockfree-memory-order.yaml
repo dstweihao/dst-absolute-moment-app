@@ -1,0 +1,21 @@
+id: "07-lockfree-memory-order"
+title: "内存序"
+progress_range: [70, 74]
+phase: 3
+phase_name: "并发编程"
+order: 29
+description: >
+  无锁原子操作与硬件重排。这一关只讲 release-acquire 建立的可见性保证。
+core_concepts:
+  - "memory_order_release 与 memory_order_acquire 搭配建立跨线程 happens-before 关系，禁止指令越过临界点重排"
+socratic_questions:
+  - id: Q0_acquire_release
+    level: "内存可见性"
+    text: "如果只使用 memory_order_relaxed，为何即使原子变量已更新，另一个线程读取非原子数据仍可能读到旧值？"
+interception:
+  minimum_pass_line: "能说明 relaxed 不建立可见性同步，编译器和 CPU 重排导致非原子数据写入未同步"
+  on_failure: "AI 演示跨核重排导致数据读写撕裂的指令执行图，通过后回归本节点"
+acceptance_criteria:
+  - "能正确配置 release-acquire 同步对实现跨线程安全传递数据"
+next_node: "b01-source-to-binary"
+prerequisites: ["06-async-event-loop"]

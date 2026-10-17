@@ -1,0 +1,21 @@
+id: "04-modern-frontier"
+title: "C++23 / C++26 标准前沿"
+progress_range: [59, 62]
+phase: 2
+phase_name: "C++ 语言核心"
+order: 26
+description: >
+  现代 C++23 与 C++26 前沿基础设施。这一关只讲 std::expected 错误处理与 std::span 连续视图。
+core_concepts:
+  - "std::expected 提供无异常开销的确定性错误返回，std::span 提供零拷贝非拥有式连续内存视图"
+socratic_questions:
+  - id: Q0_modern_markers
+    level: "现代前沿"
+    text: "C++23 的 std::expected 和 std::span 为何能彻底革新 C 风格指针加长度以及传统错误码的糟糕体验？"
+interception:
+  minimum_pass_line: "能解释 std::expected 统一成功与错误类型，std::span 消除传参长度易错缺陷"
+  on_failure: "AI 演示使用 std::expected 与 std::span 重构陈旧代码的样例，通过后回归本节点"
+acceptance_criteria:
+  - "能使用 std::expected 优雅处理函数返回错误并用 std::span 操作数组"
+next_node: "05-threads-sync"
+prerequisites: ["03-modern-cpp"]

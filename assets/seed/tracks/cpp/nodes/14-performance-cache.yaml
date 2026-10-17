@@ -1,0 +1,21 @@
+id: "14-performance-cache"
+title: "性能优化"
+progress_range: [98, 100]
+phase: 5
+phase_name: "系统编程"
+order: 37
+description: >
+  硬件架构感知与并发执行策略。这一关只讲 std::execution 并行算法与 std::simd 向量化。
+core_concepts:
+  - "利用 CPU 缓存行顺序访问连续内存，配合 std::execution::par 并行调度与 std::simd 指令集最大化算力"
+socratic_questions:
+  - id: Q0_simd_cache
+    level: "硬件加速"
+    text: "同样遍历大矩阵，按行遍历比按列遍历快十倍以上，结合 64 字节缓存行和 std::simd 解释其物理本质？"
+interception:
+  minimum_pass_line: "能说清按行访问命中连续缓存行预取，结合 SIMD 单指令多数据并发吞吐大幅提升"
+  on_failure: "AI 画出 CPU 缓存行击中与缺失的流水线性能差距图，通过后回归本节点"
+acceptance_criteria:
+  - "能编写数据局部性优化的连续存储结构并正确使用并行算法"
+next_node: "bonus-comprehensive"
+prerequisites: ["13-processes-system"]

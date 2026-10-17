@@ -1,0 +1,21 @@
+id: "b04-control-flow"
+title: "控制流"
+progress_range: [8, 10]
+phase: 1
+phase_name: "C++ 基础"
+order: 5
+description: >
+  if、for、while 控制程序走哪条路。这一关只讲循环变量的作用域和无限循环的成因。
+core_concepts:
+  - "for 循环的初始化、条件、后置表达式各在什么时刻执行，条件为假时立刻退出"
+socratic_questions:
+  - id: Q0_infinite_loop
+    level: "控制流"
+    text: "for (int i = 0; i < 10; i++) 能正常结束，while (true) 永远不停 —— 两者的区别只在「什么决定了循环出口」这件事上，你能指出来吗？"
+interception:
+  minimum_pass_line: "能说出循环的三要素：初始状态、终止条件、状态推进，缺少任意一个会有什么后果"
+  on_failure: "AI 用流程图演示三要素如何构成循环，通过后回归本节点"
+acceptance_criteria:
+  - "能写出一个用 for 循环打印 1 到 100 的程序，并说明循环变量的作用域范围"
+next_node: "b05-scope"
+prerequisites: ["f02-operators"]

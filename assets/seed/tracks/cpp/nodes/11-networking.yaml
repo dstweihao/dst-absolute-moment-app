@@ -1,0 +1,21 @@
+id: "11-networking"
+title: "网络编程"
+progress_range: [90, 94]
+phase: 4
+phase_name: "工程实践"
+order: 34
+description: >
+  套接字与 TCP 流式传输。这一关只讲应用层消息定界消除粘包。
+core_concepts:
+  - "TCP 是字节流协议无消息边界，应用层必须通过固定包头长度或特殊分隔符实现消息完整定界"
+socratic_questions:
+  - id: Q0_tcp_stream
+    level: "消息定界"
+    text: "客户端连续发送两条 100 字节的消息，服务端一次 recv 可能读到 200 字节，应用层该如何设计协议？"
+interception:
+  minimum_pass_line: "能说清 TCP 字节流无边界特性，并给出 Length-Value 或分隔符的解码缓冲区方案"
+  on_failure: "AI 画出 TCP 接收缓冲区半包与粘包的处理流程，通过后回归本节点"
+acceptance_criteria:
+  - "能设计包含长度字段的消息协议并在应用层正确解析完整报文"
+next_node: "12-design-patterns"
+prerequisites: ["10-testing"]

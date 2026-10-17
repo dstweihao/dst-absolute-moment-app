@@ -1,0 +1,21 @@
+id: "b01-source-to-binary"
+title: "从源码到可执行文件"
+progress_range: [74, 78]
+phase: 4
+phase_name: "工程实践"
+order: 30
+description: >
+  预处理、编译、汇编与链接全流程。这一关只讲符号解析发生在链接期。
+core_concepts:
+  - "预处理器展开宏与头文件，编译器生成目标文件符号表，链接器统一进行地址重定位与符号解析"
+socratic_questions:
+  - id: Q0_linker_symbols
+    level: "符号链接"
+    text: "声明了一个函数但没写定义，编译单个 .cpp 文件能通过吗？链接时为何提示 undefined symbol？"
+interception:
+  minimum_pass_line: "能指出编译器见到声明即放行生成未定符号，链接器合并所有目标文件找不到定义才会报错"
+  on_failure: "AI 展示从源码经过预编译、汇编到链接符号解析的四步流程图，通过后回归本节点"
+acceptance_criteria:
+  - "能快速识别并排查头文件重复包含或未定义符号等链接错误"
+next_node: "08-debugging-profiling"
+prerequisites: ["07-lockfree-memory-order"]

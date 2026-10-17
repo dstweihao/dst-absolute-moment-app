@@ -1,0 +1,21 @@
+id: "b07-parameter-passing"
+title: "参数传递"
+progress_range: [14, 16]
+phase: 1
+phase_name: "C++ 基础"
+order: 8
+description: >
+  值传递给形参创建独立副本。这一关只讲按值传递无法修改外部实参的物理本质。
+core_concepts:
+  - "按值传递创建实参副本：传递派生类给基类形参将发生对象切片并导致多态彻底失效"
+socratic_questions:
+  - id: Q0_pass_by_value
+    level: "传参机制"
+    text: "把派生类对象按值传给基类形参，派生类的虚函数为什么调不到了，多出来的字段去哪了？"
+interception:
+  minimum_pass_line: "能说出按值传递引发对象切片（Slicing），仅复制了基类子对象且虚表指针重置为基类"
+  on_failure: "AI 画出传参时两个变量各自的内存地址分布，通过后回归本节点"
+acceptance_criteria:
+  - "能解释按值传递派生类时发生的对象切片现象及其对多态的破坏"
+next_node: "b08-pointer"
+prerequisites: ["b06-function"]

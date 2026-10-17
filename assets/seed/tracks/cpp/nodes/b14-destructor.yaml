@@ -1,0 +1,21 @@
+id: "b14-destructor"
+title: "析构函数"
+progress_range: [30, 32]
+phase: 1
+phase_name: "C++ 基础"
+order: 16
+description: >
+  析构函数在对象生命终结时自动触发。这一关只讲确定性析构与裸 new 遗漏。
+core_concepts:
+  - "自动变量生命周期结束自动析构；通过基类指针释放对象时基类必须声明虚析构函数"
+socratic_questions:
+  - id: Q0_dtor_trigger
+    level: "确定性析构"
+    text: "Base* p = new Derived(); delete p; 如果 Base 析构函数没有加 virtual，会漏掉哪一部分的清理？"
+interception:
+  minimum_pass_line: "能说清非虚析构只会调用基类析构，Derived 的特有成员和资源将永远无法被释放"
+  on_failure: "AI 演示函数返回时局部变量析构与堆内存孤立遗失图，通过后回归本节点"
+acceptance_criteria:
+  - "能指出多态基类为何必须声明虚析构函数并规避派生类资源泄漏"
+next_node: "00-memory-model"
+prerequisites: ["b13-constructor"]

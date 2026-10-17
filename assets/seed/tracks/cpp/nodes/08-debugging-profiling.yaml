@@ -1,0 +1,21 @@
+id: "08-debugging-profiling"
+title: "调试工具链"
+progress_range: [78, 82]
+phase: 4
+phase_name: "工程实践"
+order: 31
+description: >
+  GDB、LLDB 与消毒器工具。这一关只讲 AddressSanitizer 抓捕内存越界与悬垂释放。
+core_concepts:
+  - "AddressSanitizer 在编译期插入影子内存检查，能够在运行时毫秒级精准捕获堆栈越界与 use-after-free"
+socratic_questions:
+  - id: Q0_asan_trap
+    level: "内存消毒"
+    text: "为什么普通的崩溃难以复现且排查极其耗时，开启 -fsanitize=address 后它如何给出精准到源码行的调用栈？"
+interception:
+  minimum_pass_line: "能说出 ASan 通过对每一块内存分配设置毒化影子内存，访问毒化区立刻拦截并报错"
+  on_failure: "AI 给出 ASan 报告解读指南，示范如何顺着堆栈定位野指针，通过后回归本节点"
+acceptance_criteria:
+  - "能在构建中开启 AddressSanitizer 并根据报告定位内存故障"
+next_node: "09-build-cmake"
+prerequisites: ["b01-source-to-binary"]

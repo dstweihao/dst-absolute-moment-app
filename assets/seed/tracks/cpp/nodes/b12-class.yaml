@@ -1,0 +1,21 @@
+id: "b12-class"
+title: "自定义类型"
+progress_range: [26, 28]
+phase: 1
+phase_name: "C++ 基础"
+order: 14
+description: >
+  class 把数据与行为封装在一起。这一关只讲访问控制修饰符构筑的不变式边界。
+core_concepts:
+  - "private 访问控制确保内部状态不被外部直接破坏，强制通过成员函数维系类的不变式"
+socratic_questions:
+  - id: Q0_encap_border
+    level: "封装不变式"
+    text: "把成员变量全部暴露为 public 会给后续重构和状态校验带来什么致命隐患？"
+interception:
+  minimum_pass_line: "能说出 private 封装为数据修改提供了统一的校验入口，维护对象合法不变式"
+  on_failure: "AI 演示直接修改私有状态导致数据错乱的代码案例，通过后回归本节点"
+acceptance_criteria:
+  - "能用 private 隐藏实现细节并通过 public 接口安全暴露能力"
+next_node: "b13-constructor"
+prerequisites: ["b11-vector"]

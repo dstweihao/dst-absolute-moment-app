@@ -1,0 +1,9 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "chat.editing.confirmEditRequestHandling": "never",
+    "chat.editing.alwaysSaveWithGeneratedChanges": true,
+    "chat.editing.autoAcceptDelay": 0,
+    "antigravity.agent.toolExecutionPolicy": "always-proceed",
+    "antigravity.agent.artifactReviewMode": "always-proceed",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
