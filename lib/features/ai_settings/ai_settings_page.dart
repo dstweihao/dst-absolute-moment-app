@@ -1,12 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/ai/provider_presets.dart';
@@ -14,8 +11,10 @@ import '../../data/updates/update_config.dart';
 import '../../domain/enums/app_enums.dart';
 import '../../domain/models/ai_settings.dart';
 import '../../domain/models/node.dart';
+import '../../domain/models/update_info.dart';
 import '../../providers.dart';
 import '../../router.dart';
+import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/back_leading.dart';
 
 class AiSettingsPage extends ConsumerStatefulWidget {
@@ -39,6 +38,7 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
   String? _grantedBalance;
   String? _toppedUpBalance;
   String? _balanceError;
+  bool _checkingUpdate = false;
 
   @override
   void initState() {
@@ -102,74 +102,56 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          children: [
-            // 第一部分：总的学习统计
-            _buildSectionHeader('学习统计', Icons.insights_rounded),
-            const SizedBox(height: 12),
-            _buildStatsCard(totalNodes),
-            const SizedBox(height: 28),
-
-            // 第二部分：Key 的设置
-            _buildSectionHeader('API Key 设置', Icons.key_rounded),
-            const SizedBox(height: 12),
-            _buildKeyCard(modelName),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _busy ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Center(
+              child: SizedBox(
+                height: 32,
+                child: ElevatedButton(
+                  onPressed: _busy ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
+                  child: _busy
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text(
+                          '保存',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
                 ),
-                child: _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text(
-                        '保存',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
               ),
             ),
-            const SizedBox(height: 28),
-
-            // 第三部分：作者与项目信息
-            _buildSectionHeader('作者与项目', Icons.person_outline_rounded),
-            const SizedBox(height: 12),
-            _buildAuthorCard(appVersion),
-            const SizedBox(height: 20),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF64748B),
-            letterSpacing: 0.2,
+      body: SafeArea(
+        child: ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatsCard(totalNodes),
+                const SizedBox(height: 10),
+                _buildKeyCard(modelName),
+                const SizedBox(height: 10),
+                _buildProjectCard(appVersion),
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 
@@ -177,16 +159,16 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
     final progressPercent = totalNodes > 0 ? (_passedCount / totalNodes * 100).toInt() : 0;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E5EA), width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -194,68 +176,49 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'C++ 38 关进阶路线',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '已攻克 $_passedCount 关 / 共 $totalNodes 关',
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
-                  ),
-                ],
+              const Icon(Icons.insert_chart_outlined_rounded, size: 15, color: Color(0xFF8E8E93)),
+              const SizedBox(width: 6),
+              const Text(
+                'C++ 38 关进阶路线',
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$progressPercent%',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary,
-                  ),
-                ),
+              const Spacer(),
+              Text(
+                '已掌握 $_passedCount / $totalNodes · $progressPercent%',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(2.5),
             child: LinearProgressIndicator(
               value: totalNodes > 0 ? (_passedCount / totalNodes).clamp(0.0, 1.0) : 0.0,
-              minHeight: 6,
-              backgroundColor: const Color(0xFFF1F5F9),
+              minHeight: 5,
+              backgroundColor: const Color(0xFFF2F2F7),
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _buildMetricItem(
                   '已掌握',
                   '$_passedCount 关',
-                  const Color(0xFF00B42A),
+                  const Color(0xFF34C759),
                 ),
               ),
-              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0)),
+              Container(width: 0.5, height: 20, color: const Color(0xFFE5E5EA)),
               Expanded(
                 child: _buildMetricItem(
                   '待突破',
                   '${(totalNodes - _passedCount).clamp(0, totalNodes)} 关',
-                  const Color(0xFF64748B),
+                  const Color(0xFF8E8E93),
                 ),
               ),
-              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0)),
+              Container(width: 0.5, height: 20, color: const Color(0xFFE5E5EA)),
               Expanded(
                 child: _buildMetricItem(
                   '通关率',
@@ -263,12 +226,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
                   AppColors.primary,
                 ),
               ),
-              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0)),
+              Container(width: 0.5, height: 20, color: const Color(0xFFE5E5EA)),
               Expanded(
                 child: _buildMetricItem(
-                  '1 个小时',
+                  '攻坚期',
                   '${(totalNodes - _passedCount).clamp(0, totalNodes)} 天',
-                  const Color(0xFF334155),
+                  const Color(0xFF1C1C1E),
                 ),
               ),
             ],
@@ -283,12 +246,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
       children: [
         Text(
           value,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: valueColor),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: valueColor),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 1),
         Text(
           label,
-          style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+          style: const TextStyle(fontSize: 10.5, color: Color(0xFF8E8E93)),
         ),
       ],
     );
@@ -296,16 +259,16 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
 
   Widget _buildKeyCard(String modelName) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E5EA), width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -314,68 +277,63 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         children: [
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.key_rounded, size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: 10),
+              const Icon(Icons.key_rounded, size: 15, color: Color(0xFF8E8E93)),
+              const SizedBox(width: 6),
               const Text(
                 'DeepSeek API Key',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00B42A).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  color: const Color(0xFFF2F2F7),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   modelName.isNotEmpty ? modelName : 'deepseek-reasoner',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF00B42A), fontWeight: FontWeight.w700),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 9),
           TextField(
             controller: _apiKey,
             obscureText: _obscureKey,
-            style: const TextStyle(fontSize: 15),
+            style: const TextStyle(fontSize: 13),
             decoration: InputDecoration(
+              isDense: true,
               hintText: 'sk-xxxxxxxxxxxxxxxxxxxxxxxx',
-              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+              hintStyle: const TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
               filled: true,
-              fillColor: const Color(0xFFF8FAFC),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              fillColor: const Color(0xFFF2F2F7),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.2),
               ),
               suffixIcon: IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 icon: Icon(
                   _obscureKey ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  size: 20,
-                  color: const Color(0xFF94A3B8),
+                  size: 17,
+                  color: const Color(0xFF8E8E93),
                 ),
                 onPressed: () => setState(() => _obscureKey = !_obscureKey),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           _buildBalanceBar(),
         ],
       ),
@@ -445,23 +403,22 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
   Widget _buildBalanceBar() {
     if (_loadingBalance) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          color: const Color(0xFFF2F2F7),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           children: const [
             SizedBox(
-              width: 13,
-              height: 13,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(strokeWidth: 1.6),
             ),
             SizedBox(width: 8),
             Text(
               '正在查询 DeepSeek 实时额度…',
-              style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 11.5, color: Color(0xFF8E8E93)),
             ),
           ],
         ),
@@ -470,27 +427,26 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
 
     if (_balanceError != null) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFFFEF2F2),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFFECACA)),
+          color: const Color(0xFFFFF2F2),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           children: [
-            const Icon(Icons.error_outline_rounded, size: 15, color: Color(0xFFEF4444)),
+            const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFFFF3B30)),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 _balanceError!,
-                style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444)),
+                style: const TextStyle(fontSize: 11.5, color: Color(0xFFFF3B30)),
               ),
             ),
             InkWell(
               onTap: () => _fetchDeepSeekBalance(_apiKey.text.trim()),
               child: const Text(
                 '重试',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEF4444)),
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFFFF3B30)),
               ),
             ),
           ],
@@ -498,38 +454,26 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
       );
     }
 
-    // 尚未查询：展示轻量级「查询实时额度」操作条
     if (_totalBalance == null && _balanceAvailable == null) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
             '支持查询官方账户剩余额度',
-            style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+            style: TextStyle(fontSize: 11.5, color: Color(0xFF8E8E93)),
           ),
           InkWell(
             onTap: () => _fetchDeepSeekBalance(_apiKey.text.trim()),
             borderRadius: BorderRadius.circular(6),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.account_balance_wallet_outlined, size: 14, color: AppColors.primary),
-                  const SizedBox(width: 4),
-                  Text(
-                    '查询实时额度',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Text(
+                '查询实时额度',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
@@ -537,32 +481,30 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
       );
     }
 
-    // 已查询成功：展示紧凑高级的额度条
     final isAvailable = _balanceAvailable == true;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: const Color(0xFFF2F2F7),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         children: [
           Container(
-            width: 7,
-            height: 7,
+            width: 6,
+            height: 6,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isAvailable ? const Color(0xFF00B42A) : const Color(0xFFEF4444),
+              color: isAvailable ? const Color(0xFF34C759) : const Color(0xFFFF3B30),
             ),
           ),
-          const SizedBox(width: 7),
+          const SizedBox(width: 6),
           Text(
             isAvailable ? '可用' : '耗尽',
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isAvailable ? const Color(0xFF00B42A) : const Color(0xFFEF4444),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+              color: isAvailable ? const Color(0xFF34C759) : const Color(0xFFFF3B30),
             ),
           ),
           const SizedBox(width: 8),
@@ -570,12 +512,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
             child: Text.rich(
               TextSpan(
                 text: '¥ $_totalBalance ',
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
                 children: [
                   if (_toppedUpBalance != null || _grantedBalance != null)
                     TextSpan(
                       text: '(充值 ¥${_toppedUpBalance ?? "0"} · 赠送 ¥${_grantedBalance ?? "0"})',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Color(0xFF64748B)),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Color(0xFF8E8E93)),
                     ),
                 ],
               ),
@@ -584,10 +526,10 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
           ),
           InkWell(
             onTap: () => _fetchDeepSeekBalance(_apiKey.text.trim()),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             child: const Padding(
-              padding: EdgeInsets.all(4),
-              child: Icon(Icons.refresh_rounded, size: 15, color: Color(0xFF64748B)),
+              padding: EdgeInsets.all(2),
+              child: Icon(Icons.refresh_rounded, size: 14, color: Color(0xFF8E8E93)),
             ),
           ),
         ],
@@ -615,8 +557,10 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
   Future<void> _save() async {
     final key = _apiKey.text.trim();
     if (key.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请先输入有效的 API Key')),
+      _showCenteredDialog(
+        title: '提示',
+        message: '请先输入有效的 API Key',
+        isError: true,
       );
       return;
     }
@@ -636,37 +580,123 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         ..invalidate(aiApiKeyProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          const SnackBar(
-            content: Text('配置已保存'),
-            duration: Duration(seconds: 2),
-          ),
-        );
+      _showCenteredDialog(
+        title: '保存成功',
+        message: 'API Key 与模型配置已生效',
+      );
       _fetchDeepSeekBalance(key);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存失败：$e')),
+      _showCenteredDialog(
+        title: '保存失败',
+        message: '保存出错：$e',
+        isError: true,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Widget _buildAuthorCard(String version) {
+  void _showCenteredDialog({
+    required String title,
+    required String message,
+    bool isError = false,
+  }) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: 270,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0x1F000000), width: 0.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1C1C1E),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    if (message.isNotEmpty) ...[
+                      const SizedBox(height: 5),
+                      Text(
+                        message,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.normal,
+                          color: Color(0xFF3C3C43),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: isError ? const Color(0xFFFF3B30) : AppColors.primary,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(14)),
+                    ),
+                  ),
+                  child: const Text(
+                    '好',
+                    style: TextStyle(
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectCard(String version) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E5EA), width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Colors.black.withValues(alpha: 0.015),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -675,147 +705,260 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.code_rounded, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'dstweihao',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
-                      ),
+              const AppLogo(size: 34),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '绝对时刻',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1C1C1E),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '绝对时刻 · v$version',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
-                      ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    '版本 $version',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF8E8E93),
+                      fontWeight: FontWeight.w400,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              OutlinedButton.icon(
-                onPressed: () => context.push(AppRouter.update),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                icon: Icon(Icons.system_update_alt_rounded, size: 14, color: AppColors.primary),
-                label: Text(
-                  '检查更新',
-                  style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+              const Spacer(),
+              SizedBox(
+                height: 26,
+                child: OutlinedButton(
+                  onPressed: _checkingUpdate ? null : _handleCheckUpdate,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    side: const BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
+                    backgroundColor: const Color(0xFFF2F2F7),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
+                  ),
+                  child: _checkingUpdate
+                      ? const SizedBox(
+                          width: 11,
+                          height: 11,
+                          child: CircularProgressIndicator(strokeWidth: 1.8),
+                        )
+                      : Text(
+                          '检查更新',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          const SizedBox(height: 14),
-          _buildInfoRow(
-            icon: Icons.link_rounded,
-            label: 'GitHub',
-            value: 'github.com/dstweihao/dst-absolute-moment-app',
-            onTap: () => _openUrl('https://github.com/dstweihao/dst-absolute-moment-app'),
+          const SizedBox(height: 10),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
+          _buildAppleRow('项目简介', '现代 C++ 交互式底层推导工作台'),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
+          _buildAppleRow('GitHub', 'github.com/dstweihao/dst-absolute-moment-app'),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
+          _buildAppleRow('个人网站', 'https://dstweihao.cn'),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
+          _buildAppleRow('微信公众号', '码上生长'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppleRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7.5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 76,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF8E8E93),
+              ),
+            ),
           ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.language_rounded,
-            label: '个人网站',
-            value: 'https://dstweihao.cn',
-            onTap: () => _openUrl('https://dstweihao.cn'),
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.campaign_rounded,
-            label: '微信公众号',
-            value: '码上生长 (点击复制)',
-            actionIcon: Icons.copy_rounded,
-            onTap: () => _copyText('码上生长', '已复制微信公众号：码上生长'),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF1C1C1E),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-    IconData actionIcon = Icons.open_in_new_rounded,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        child: Row(
-          children: [
-            Icon(icon, size: 16, color: const Color(0xFF64748B)),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 72,
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.primary,
-                  decoration: TextDecoration.underline,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(actionIcon, size: 14, color: AppColors.primary),
-          ],
-        ),
-      ),
-    );
-  }
+  Future<void> _handleCheckUpdate() async {
+    if (_checkingUpdate) return;
+    setState(() => _checkingUpdate = true);
 
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      final current = await ref.read(appVersionProvider.future);
+      final latest = await ref.read(updateClientProvider).checkLatest();
+
+      if (!mounted) return;
+      setState(() => _checkingUpdate = false);
+
+      if (latest == null || !isNewerVersion(latest.tagName, current)) {
+        _showCenteredDialog(
+          title: '检查更新',
+          message: '当前已是最新版本 (v$current)',
+        );
+        return;
+      }
+
+      _showUpdateDialog(current, latest);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _checkingUpdate = false);
+      _showCenteredDialog(
+        title: '检查更新失败',
+        message: '网络或服务异常：$e',
+        isError: true,
+      );
     }
   }
 
-  void _copyText(String text, String tip) {
-    Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(tip),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+  void _showUpdateDialog(String current, ReleaseInfo release) {
+    bool downloading = false;
+    double? downloadProgress;
+    String? errorMsg;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            title: Row(
+              children: [
+                Icon(Icons.system_update_rounded, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text('发现新版本 ${release.tagName}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '当前版本 v$current，最新发布 ${release.tagName}',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                ),
+                if (release.notes.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(maxHeight: 120),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Text(
+                        release.notes.trim(),
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF334155)),
+                      ),
+                    ),
+                  ),
+                ],
+                if (downloading) ...[
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: downloadProgress,
+                      minHeight: 5,
+                      backgroundColor: const Color(0xFFF1F5F9),
+                      valueColor: AlwaysStoppedAnimation(AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    downloadProgress != null
+                        ? '正在下载 ${(downloadProgress! * 100).toStringAsFixed(0)}%…'
+                        : '正在连接下载源…',
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                  ),
+                ],
+                if (errorMsg != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMsg!,
+                    style: const TextStyle(fontSize: 11, color: Color(0xFFEF4444)),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              if (!downloading)
+                TextButton(
+                  onPressed: () => Navigator.of(dialogCtx).pop(),
+                  child: const Text('暂不更新', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+                ),
+              ElevatedButton(
+                onPressed: downloading
+                    ? null
+                    : () async {
+                        setDialogState(() {
+                          downloading = true;
+                          errorMsg = null;
+                        });
+                        try {
+                          final installer = ref.read(updateInstallerProvider);
+                          final result = await installer(
+                            release,
+                            onProgress: (p) {
+                              setDialogState(() => downloadProgress = p);
+                            },
+                          );
+                          if (!result.isSuccess) {
+                            setDialogState(() {
+                              downloading = false;
+                              errorMsg = result.message;
+                            });
+                          } else {
+                            if (dialogCtx.mounted) Navigator.of(dialogCtx).pop();
+                          }
+                        } catch (e) {
+                          setDialogState(() {
+                            downloading = false;
+                            errorMsg = '下载安装失败：$e';
+                          });
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                ),
+                child: Text(downloading ? '下载中…' : '立即下载更新', style: const TextStyle(fontSize: 13)),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -11,6 +9,7 @@ import '../../data/updates/update_config.dart';
 import '../../providers.dart';
 import '../../router.dart';
 import '../../shared/widgets/app_card.dart';
+import '../../shared/widgets/app_logo.dart';
 
 /// 系统设置页
 class StorageSettingsPage extends ConsumerStatefulWidget {
@@ -191,37 +190,65 @@ class _StorageSettingsPageState extends ConsumerState<StorageSettingsPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-              Text('关于与开发者', style: AppTypography.subtitle),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(7),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF165DFF).withValues(alpha: 0.22),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const AppLogo(size: 28),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          '绝对时刻',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1C1C1E),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '版本 $version',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF8E8E93),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text('绝对时刻 (Absolute Moment) · 现代 C++ 交互式推导工作台', style: AppTypography.caption),
-          const SizedBox(height: AppSpacing.md),
-          _kv('当前版本', 'v$version'),
-          _interactiveKv(
-            k: 'GitHub',
-            v: 'https://github.com/dstweihao/dst-absolute-moment-app',
-            onTap: () => _openUrl('https://github.com/dstweihao/dst-absolute-moment-app'),
-          ),
-          _interactiveKv(
-            k: '个人网站',
-            v: 'https://dstweihao.cn',
-            onTap: () => _openUrl('https://dstweihao.cn'),
-          ),
-          _interactiveKv(
-            k: '微信公众号',
-            v: '码上生长 (点击复制)',
-            actionIcon: Icons.copy_rounded,
-            onTap: () => _copyText('码上生长', '已复制微信公众号：码上生长'),
-          ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 10),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
+          _buildAppleRow('项目简介', '现代 C++ 交互式底层推导工作台'),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
+          _buildAppleRow('GitHub', 'github.com/dstweihao/dst-absolute-moment-app'),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
+          _buildAppleRow('个人网站', 'https://dstweihao.cn'),
+          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
+          _buildAppleRow('微信公众号', '码上生长'),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => context.push(AppRouter.update),
-              icon: const Icon(Icons.system_update_alt_rounded, size: 18),
+              icon: const Icon(Icons.sync_rounded, size: 16),
               label: const Text('检查版本更新'),
             ),
           ),
@@ -230,65 +257,42 @@ class _StorageSettingsPageState extends ConsumerState<StorageSettingsPage> {
     );
   }
 
-  Widget _interactiveKv({
-    required String k,
-    required String v,
-    required VoidCallback onTap,
-    IconData? actionIcon,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 80,
-              child: Text(k, style: AppTypography.caption),
-            ),
-            Expanded(
-              child: Text(
-                v,
-                style: AppTypography.body.copyWith(
-                  fontSize: 14,
-                  color: AppColors.primary,
-                  decoration: TextDecoration.underline,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+  Widget _buildAppleRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7.5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 76,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF8E8E93),
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Icon(
-              actionIcon ?? Icons.open_in_new_rounded,
-              size: 16,
-              color: AppColors.primary,
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF1C1C1E),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri != null && await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
 
-  void _copyText(String text, String tip) {
-    Clipboard.setData(ClipboardData(text: text));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(tip),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+
 
   Widget _kv(String k, String v) {
     return Padding(
