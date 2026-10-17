@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon/icon.png" width="128" height="128" alt="绝对时刻 Logo" />
+</p>
+
 # 绝对时刻 (Absolute Moment)
 
 > 基于 Flutter 的现代 C++ 交互式推导工作台。集成 DeepSeek V3 / R1 苏格拉底单点反诘引擎，单关攻坚，闭环推导汇编、内存与系统调用。
@@ -8,7 +12,7 @@
 
 - **定位**：跨平台（macOS / Linux / Windows / Web）现代 C++ 底层推导工作台。
 - **模式**：苏格拉底式单点反诘，禁直给代码答案，逼迫推导源码到 ELF 目标文件、虚拟内存与寄存器操作物理突变。
-- **存储**：本地优先（Local-First），Markdown 正文 + YAML FrontMatter 结构化元数据，支持标准 WebDAV 协议跨端同步。
+- **存储**：本地优先（Local-First），会话独立持久化，打卡与推导支持纯文本 Markdown + YAML FrontMatter 本地落盘。
 
 ---
 
@@ -42,10 +46,9 @@
 - **独立持久化**：`node_chat_<id>` 关卡唯一键存储，各关卡上下文互不干扰。
 - **无损切换**：跨关卡或大纲跳转，自动持久化当前会话，上下文零重置、零闪烁。
 
-### 5. 本地优先纯文本沉淀
-- **格式透明**：Markdown 正文 + YAML FrontMatter 元数据落盘。
-- **双向兼容**：程序解析头部元数据，正文支持 VS Code、Obsidian 直接编辑。
-- **标准同步**：内置标准 WebDAV 协议适配层，支持主流网盘与自建服务器跨端同步。
+### 5. 本地优先与纯文本落盘
+- **会话持久化**：关卡会话基于本地存储（`node_chat_<id>`）即时固化，无外部服务端依赖。
+- **纯文本兼容**：打卡沉淀支持 Markdown 正文 + YAML FrontMatter 结构化落盘，本地文本编辑器可直接查阅与修改。
 
 ### 6. 安全防御与精准错误流
 - **前置守护**：SensitiveContentGuard 拦截情绪与非技术用语，给出理性合规引导。
@@ -79,15 +82,14 @@ lib/
 │   ├── repositories/      # 仓储实现：路线管理、资源扫描、打卡落盘
 │   ├── serialization/     # Markdown / YAML FrontMatter 编解码
 │   ├── storage/           # 本地存储抽象（IO / Web 分支实现）
-│   ├── updates/           # 自动更新检测与分发
-│   └── webdav/            # WebDAV 同步适配器
+│   └── updates/           # 自动更新检测与分发
 ├── domain/models/         # 实体模型：Node、Checkin、AiSettings 等
 ├── features/
 │   ├── ai_settings/       # 模型切换、API Key 配置与连接验证
 │   ├── dashboard/         # 学习看板与进度分布
 │   ├── learn/             # 推导交互主界面：流式气泡、掌握度即时结算
 │   ├── onboarding/        # 新用户引导初始化
-│   ├── settings/          # 存储路径设置与 WebDAV 配置
+│   ├── settings/          # 系统设置（存储路径配置、版本更新）
 │   ├── sop/               # 结构化推导 SOP 流水线与会话编排
 │   ├── stats/             # 攻坚数据统计
 │   └── tracks/            # 38 关大纲列表与关卡详情
