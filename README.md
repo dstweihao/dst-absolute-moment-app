@@ -23,6 +23,7 @@
 | **iOS** | [absolute-moment-ios-release.ipa](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-ios-release.ipa) | 8MB · 支持 iOS 15+ (TrollStore / 签名直装) |
 | **macOS** | [absolute-moment-macos-arm64.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-macos-arm64.zip) | 19MB · Apple Silicon 原生 App (解压即用) |
 | **Web** | [absolute-moment-web.zip](https://github.com/dstweihao/dst-absolute-moment-app/releases/download/v1.0.0/absolute-moment-web.zip) | 14MB · 静态 Web 部署包 |
+| **Docker / Package** | [ghcr.io/dstweihao/dst-absolute-moment-app](https://github.com/dstweihao/dst-absolute-moment-app/packages) | GitHub Packages 容器镜像 · `docker run -d -p 8080:80 ghcr.io/dstweihao/dst-absolute-moment-app:latest` |
 | **Linux** | GitHub Actions 自动构建 | [CI/CD 自动化构建 x64 发布包](https://github.com/dstweihao/dst-absolute-moment-app/actions) |
 
 ---
