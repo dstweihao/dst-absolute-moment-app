@@ -1,11 +1,11 @@
 {
-    "name": "absolute_moment_app",
-    "short_name": "absolute_moment_app",
+    "name": "绝对时刻",
+    "short_name": "绝对时刻",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#165DFF",
     "theme_color": "#165DFF",
-    "description": "A new Flutter project.",
+    "description": "绝对时刻 · 现代 C++ 交互式推导工作台",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

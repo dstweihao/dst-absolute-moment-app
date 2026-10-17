@@ -583,8 +583,10 @@ class _LearnPageState extends ConsumerState<LearnPage> {
                     ),
                   ],
                   if (!isUser &&
-                      (msg.content.contains('尚未配置 DeepSeek API Key') ||
-                          msg.content.contains('API Key 无效或鉴权失败'))) ...[
+                      (msg.content.contains('未配置 DeepSeek') ||
+                          msg.content.contains('尚未配置 DeepSeek') ||
+                          msg.content.contains('Key 无效') ||
+                          msg.content.contains('鉴权失败'))) ...[
                     const SizedBox(height: 10),
                     ElevatedButton.icon(
                       onPressed: () => context.push(AppRouter.aiSettings),
@@ -1108,8 +1110,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
       if (!mounted) return;
       setState(() {
         _history.add(AiMessage.assistant(
-          '⚠️ 尚未配置 DeepSeek API Key\n\n'
-          '👉 请点击下方按钮或右上角设置图标 (⚙️) 填写您的 API Key。',
+          '未配置 DeepSeek Key。点击下方按钮前往设置',
         ));
         _busy = false;
       });
@@ -1177,36 +1178,28 @@ class _LearnPageState extends ConsumerState<LearnPage> {
     if (e is AiException) {
       switch (e.kind) {
         case AiErrorKind.notConfigured:
-          return '⚠️ 尚未配置 DeepSeek API Key\n\n'
-              '👉 请点击下方按钮或右上角设置图标 (⚙️) 填写您的 API Key。';
+          return '未配置 DeepSeek Key。点击下方按钮前往设置';
         case AiErrorKind.unauthorized:
-          return '⚠️ API Key 无效或鉴权失败\n\n'
-              '👉 请检查填写的 DeepSeek API Key 是否正确有效。';
+          return 'Key 无效或鉴权失败。请检查有效性';
         case AiErrorKind.contentFilter:
-          return '⚠️ 内容触发安全审查或敏感词过滤\n\n'
-              '👉 输入内容可能包含不当用语、违禁词或敏感表达，已被系统拦截。请调整表述，使用理性的技术术语重新输入。';
+          return '触发安全审查。请使用技术术语重新输入';
         case AiErrorKind.rateLimited:
-          return '⚠️ 官方服务频次超限或额度不足\n\n'
-              '👉 DeepSeek 服务调用过于频繁或账户余额已耗尽，请稍后重试或检查账户额度。';
+          return '服务频次超限或余额耗尽。请稍后重试';
         case AiErrorKind.modelNotFound:
-          return '⚠️ 找不到指定的模型\n\n'
-              '👉 请在设置中确认选择的模型（如 deepseek-chat）是否存在。';
+          return '未找到指定模型。请检查设置';
         case AiErrorKind.network:
-          return '⚠️ 网络连接异常\n\n'
-              '👉 无法连接到 AI 服务，请检查本地网络连接或代理设置。';
+          return '网络连接异常。请检查网络';
         case AiErrorKind.server:
-          return '⚠️ AI 服务端暂时繁忙\n\n'
-              '👉 服务端返回错误，请稍后重新提问。';
+          return '服务端暂时繁忙。请稍后重试';
         case AiErrorKind.badRequest:
-          return '⚠️ 请求无法处理\n\n'
-              '👉 ${e.detail.isNotEmpty ? e.detail : '请求格式不被支持，请检查输入。'}';
+          return e.detail.isNotEmpty ? e.detail : '请求格式错误';
         case AiErrorKind.malformedResponse:
         case AiErrorKind.cancelled:
         case AiErrorKind.unknown:
-          return '⚠️ 调用异常：${e.message}${e.detail.isNotEmpty ? '\n\n详情：${e.detail}' : ''}';
+          return '调用异常：${e.message}';
       }
     }
-    return '⚠️ 发送失败：$e';
+    return '发送失败：$e';
   }
 
   /// 解析 AI 给出的掌握度评级，达到 100% 自动解锁下一关
@@ -1380,7 +1373,9 @@ $base
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '当前为基础离线模式。配置 DeepSeek Key 开启实时反诘考核',
+              '离线模式。配置 Key 开启反诘',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500),
             ),
           ),

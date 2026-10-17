@@ -2,9 +2,8 @@
 class UpdateConfig {
   UpdateConfig._();
 
-  /// ⚠️ 占位：正式发布前替换为真实 owner / repo，否则 API 一律 404
-  static const String gitHubOwner = 'YOUR_GITHUB_OWNER';
-  static const String gitHubRepo = 'YOUR_GITHUB_REPO';
+  static const String gitHubOwner = 'dstweihao';
+  static const String gitHubRepo = 'dst-absolute-moment-app';
 
   static const String apiBase = 'https://api.github.com';
 
