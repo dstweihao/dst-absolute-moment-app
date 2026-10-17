@@ -1,12 +1,16 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/ai/provider_presets.dart';
+import '../../data/updates/update_config.dart';
 import '../../domain/enums/app_enums.dart';
 import '../../domain/models/ai_settings.dart';
 import '../../domain/models/node.dart';
@@ -65,6 +69,7 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
     final config = ref.watch(appConfigProvider);
     final savedKey = ref.watch(aiApiKeyProvider);
     final aiSettings = ref.watch(aiSettingsProvider);
+    final appVersion = ref.watch(appVersionProvider).value ?? UpdateConfig.fallbackVersion;
     final allNodes = ref.watch(nodesProvider(ref.watch(activeTrackIdProvider))).value ?? const <Node>[];
     final totalNodes = allNodes.isNotEmpty ? allNodes.length : 38;
 
@@ -137,6 +142,13 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
                       ),
               ),
             ),
+            const SizedBox(height: 28),
+
+            // 第三部分：作者与项目信息
+            _buildSectionHeader('作者与项目', Icons.person_outline_rounded),
+            const SizedBox(height: 12),
+            _buildAuthorCard(appVersion),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -624,11 +636,15 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         ..invalidate(aiApiKeyProvider);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('配置已保存')),
-      );
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('配置已保存'),
+            duration: Duration(seconds: 2),
+          ),
+        );
       _fetchDeepSeekBalance(key);
-      Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -637,5 +653,169 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Widget _buildAuthorCard(String version) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(Icons.code_rounded, color: AppColors.primary, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'dstweihao',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '绝对时刻 · v$version',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => context.push(AppRouter.update),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: Icon(Icons.system_update_alt_rounded, size: 14, color: AppColors.primary),
+                label: Text(
+                  '检查更新',
+                  style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const SizedBox(height: 14),
+          _buildInfoRow(
+            icon: Icons.link_rounded,
+            label: 'GitHub',
+            value: 'github.com/dstweihao/dst-absolute-moment-app',
+            onTap: () => _openUrl('https://github.com/dstweihao/dst-absolute-moment-app'),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            icon: Icons.language_rounded,
+            label: '个人网站',
+            value: 'https://dstweihao.cn',
+            onTap: () => _openUrl('https://dstweihao.cn'),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            icon: Icons.campaign_rounded,
+            label: '微信公众号',
+            value: '码上生长 (点击复制)',
+            actionIcon: Icons.copy_rounded,
+            onTap: () => _copyText('码上生长', '已复制微信公众号：码上生长'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    IconData actionIcon = Icons.open_in_new_rounded,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFF64748B)),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 72,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.primary,
+                  decoration: TextDecoration.underline,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(actionIcon, size: 14, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _copyText(String text, String tip) {
+    Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tip),
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 }
