@@ -64,3 +64,11 @@ key.properties
 # Scratch & local temp
 scratch/
 **/.tempmediaStorage/
+
+# Secrets & Credentials
+.env*
+*.key
+*.pem
+credentials.json
+secret.json
+
