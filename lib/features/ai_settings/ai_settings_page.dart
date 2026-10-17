@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/ai/provider_presets.dart';
@@ -102,56 +104,74 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: Center(
-              child: SizedBox(
-                height: 32,
-                child: ElevatedButton(
-                  onPressed: _busy ? null : _save,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    elevation: 0,
-                  ),
-                  child: _busy
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text(
-                          '保存',
-                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
-        child: ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-          child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStatsCard(totalNodes),
-                const SizedBox(height: 10),
-                _buildKeyCard(modelName),
-                const SizedBox(height: 10),
-                _buildProjectCard(appVersion),
-              ],
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          children: [
+            // 第一部分：总的学习统计
+            _buildSectionHeader('学习统计', Icons.insights_rounded),
+            const SizedBox(height: 12),
+            _buildStatsCard(totalNodes),
+            const SizedBox(height: 28),
+
+            // 第二部分：Key 的设置
+            _buildSectionHeader('API Key 设置', Icons.key_rounded),
+            const SizedBox(height: 12),
+            _buildKeyCard(modelName),
+            const SizedBox(height: 24),
+
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _busy ? null : _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: _busy
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text(
+                        '保存',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+              ),
             ),
-          ),
+            const SizedBox(height: 28),
+
+            // 第三部分：作者与项目信息
+            _buildSectionHeader('作者与项目', Icons.person_outline_rounded),
+            const SizedBox(height: 12),
+            _buildAuthorCard(appVersion),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF64748B),
+            letterSpacing: 0.2,
+          ),
+        ),
+      ],
     );
   }
 
@@ -159,16 +179,16 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
     final progressPercent = totalNodes > 0 ? (_passedCount / totalNodes * 100).toInt() : 0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E5EA), width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -176,49 +196,68 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.insert_chart_outlined_rounded, size: 15, color: Color(0xFF8E8E93)),
-              const SizedBox(width: 6),
-              const Text(
-                'C++ 38 关进阶路线',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'C++ 38 关进阶路线',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '已攻克 $_passedCount 关 / 共 $totalNodes 关',
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  ),
+                ],
               ),
-              const Spacer(),
-              Text(
-                '已掌握 $_passedCount / $totalNodes · $progressPercent%',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$progressPercent%',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           ClipRRect(
-            borderRadius: BorderRadius.circular(2.5),
+            borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: totalNodes > 0 ? (_passedCount / totalNodes).clamp(0.0, 1.0) : 0.0,
-              minHeight: 5,
-              backgroundColor: const Color(0xFFF2F2F7),
+              minHeight: 6,
+              backgroundColor: const Color(0xFFF1F5F9),
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 18),
           Row(
             children: [
               Expanded(
                 child: _buildMetricItem(
                   '已掌握',
                   '$_passedCount 关',
-                  const Color(0xFF34C759),
+                  const Color(0xFF00B42A),
                 ),
               ),
-              Container(width: 0.5, height: 20, color: const Color(0xFFE5E5EA)),
+              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0)),
               Expanded(
                 child: _buildMetricItem(
                   '待突破',
                   '${(totalNodes - _passedCount).clamp(0, totalNodes)} 关',
-                  const Color(0xFF8E8E93),
+                  const Color(0xFF64748B),
                 ),
               ),
-              Container(width: 0.5, height: 20, color: const Color(0xFFE5E5EA)),
+              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0)),
               Expanded(
                 child: _buildMetricItem(
                   '通关率',
@@ -226,12 +265,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
                   AppColors.primary,
                 ),
               ),
-              Container(width: 0.5, height: 20, color: const Color(0xFFE5E5EA)),
+              Container(width: 1, height: 32, color: const Color(0xFFE2E8F0)),
               Expanded(
                 child: _buildMetricItem(
                   '攻坚期',
                   '${(totalNodes - _passedCount).clamp(0, totalNodes)} 天',
-                  const Color(0xFF1C1C1E),
+                  const Color(0xFF334155),
                 ),
               ),
             ],
@@ -246,12 +285,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
       children: [
         Text(
           value,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: valueColor),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: valueColor),
         ),
-        const SizedBox(height: 1),
+        const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(fontSize: 10.5, color: Color(0xFF8E8E93)),
+          style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
         ),
       ],
     );
@@ -259,16 +298,16 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
 
   Widget _buildKeyCard(String modelName) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E5EA), width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -277,63 +316,68 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.key_rounded, size: 15, color: Color(0xFF8E8E93)),
-              const SizedBox(width: 6),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.key_rounded, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: 10),
               const Text(
                 'DeepSeek API Key',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F7),
-                  borderRadius: BorderRadius.circular(4),
+                  color: const Color(0xFF00B42A).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   modelName.isNotEmpty ? modelName : 'deepseek-reasoner',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF00B42A), fontWeight: FontWeight.w700),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 9),
+          const SizedBox(height: 16),
           TextField(
             controller: _apiKey,
             obscureText: _obscureKey,
-            style: const TextStyle(fontSize: 13),
+            style: const TextStyle(fontSize: 15),
             decoration: InputDecoration(
-              isDense: true,
               hintText: 'sk-xxxxxxxxxxxxxxxxxxxxxxxx',
-              hintStyle: const TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
               filled: true,
-              fillColor: const Color(0xFFF2F2F7),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              fillColor: const Color(0xFFF8FAFC),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: AppColors.primary, width: 1.2),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
               ),
               suffixIcon: IconButton(
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                 icon: Icon(
                   _obscureKey ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  size: 17,
-                  color: const Color(0xFF8E8E93),
+                  size: 20,
+                  color: const Color(0xFF94A3B8),
                 ),
                 onPressed: () => setState(() => _obscureKey = !_obscureKey),
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _buildBalanceBar(),
         ],
       ),
@@ -403,22 +447,23 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
   Widget _buildBalanceBar() {
     if (_loadingBalance) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F2F7),
-          borderRadius: BorderRadius.circular(6),
+          color: const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: const [
             SizedBox(
-              width: 12,
-              height: 12,
-              child: CircularProgressIndicator(strokeWidth: 1.6),
+              width: 13,
+              height: 13,
+              child: CircularProgressIndicator(strokeWidth: 2),
             ),
             SizedBox(width: 8),
             Text(
               '正在查询 DeepSeek 实时额度…',
-              style: TextStyle(fontSize: 11.5, color: Color(0xFF8E8E93)),
+              style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -427,26 +472,27 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
 
     if (_balanceError != null) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF2F2),
-          borderRadius: BorderRadius.circular(6),
+          color: const Color(0xFFFEF2F2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFFECACA)),
         ),
         child: Row(
           children: [
-            const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFFFF3B30)),
+            const Icon(Icons.error_outline_rounded, size: 15, color: Color(0xFFEF4444)),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 _balanceError!,
-                style: const TextStyle(fontSize: 11.5, color: Color(0xFFFF3B30)),
+                style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444)),
               ),
             ),
             InkWell(
               onTap: () => _fetchDeepSeekBalance(_apiKey.text.trim()),
               child: const Text(
                 '重试',
-                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFFFF3B30)),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFEF4444)),
               ),
             ),
           ],
@@ -460,20 +506,31 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         children: [
           const Text(
             '支持查询官方账户剩余额度',
-            style: TextStyle(fontSize: 11.5, color: Color(0xFF8E8E93)),
+            style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
           ),
           InkWell(
             onTap: () => _fetchDeepSeekBalance(_apiKey.text.trim()),
             borderRadius: BorderRadius.circular(6),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Text(
-                '查询实时额度',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primary,
-                ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    '查询实时额度',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -483,28 +540,29 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
 
     final isAvailable = _balanceAvailable == true;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F2F7),
-        borderRadius: BorderRadius.circular(6),
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 7,
+            height: 7,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isAvailable ? const Color(0xFF34C759) : const Color(0xFFFF3B30),
+              color: isAvailable ? const Color(0xFF00B42A) : const Color(0xFFEF4444),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 7),
           Text(
             isAvailable ? '可用' : '耗尽',
             style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w500,
-              color: isAvailable ? const Color(0xFF34C759) : const Color(0xFFFF3B30),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isAvailable ? const Color(0xFF00B42A) : const Color(0xFFEF4444),
             ),
           ),
           const SizedBox(width: 8),
@@ -512,12 +570,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
             child: Text.rich(
               TextSpan(
                 text: '¥ $_totalBalance ',
-                style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1E293B)),
                 children: [
                   if (_toppedUpBalance != null || _grantedBalance != null)
                     TextSpan(
                       text: '(充值 ¥${_toppedUpBalance ?? "0"} · 赠送 ¥${_grantedBalance ?? "0"})',
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Color(0xFF8E8E93)),
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.normal, color: Color(0xFF64748B)),
                     ),
                 ],
               ),
@@ -526,10 +584,10 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
           ),
           InkWell(
             onTap: () => _fetchDeepSeekBalance(_apiKey.text.trim()),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             child: const Padding(
-              padding: EdgeInsets.all(2),
-              child: Icon(Icons.refresh_rounded, size: 14, color: Color(0xFF8E8E93)),
+              padding: EdgeInsets.all(4),
+              child: Icon(Icons.refresh_rounded, size: 15, color: Color(0xFF64748B)),
             ),
           ),
         ],
@@ -602,79 +660,75 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
     required String message,
     bool isError = false,
   }) {
-    if (!mounted) return;
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 270,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0x1F000000), width: 0.5),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1C1C1E),
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    if (message.isNotEmpty) ...[
-                      const SizedBox(height: 5),
-                      Text(
-                        message,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.normal,
-                          color: Color(0xFF3C3C43),
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ],
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isError
+                      ? const Color(0xFFFEE2E2)
+                      : const Color(0xFFDCFCE7),
+                ),
+                child: Icon(
+                  isError ? Icons.error_outline_rounded : Icons.check_rounded,
+                  size: 26,
+                  color: isError
+                      ? const Color(0xFFEF4444)
+                      : const Color(0xFF10B981),
                 ),
               ),
-              const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              if (message.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    color: Color(0xFF64748B),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                height: 44,
-                child: TextButton(
+                height: 40,
+                child: ElevatedButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  style: TextButton.styleFrom(
-                    foregroundColor: isError ? const Color(0xFFFF3B30) : AppColors.primary,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(14)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isError
+                        ? const Color(0xFFEF4444)
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    elevation: 0,
                   ),
                   child: const Text(
-                    '好',
-                    style: TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    '知道了',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -685,18 +739,18 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
     );
   }
 
-  Widget _buildProjectCard(String version) {
+  Widget _buildAuthorCard(String version) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E5EA), width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.015),
-            blurRadius: 6,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -705,107 +759,162 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         children: [
           Row(
             children: [
-              const AppLogo(size: 34),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '绝对时刻',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1C1C1E),
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    '版本 $version',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF8E8E93),
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.16)),
+                ),
+                alignment: Alignment.center,
+                child: const AppLogo(size: 26),
               ),
-              const Spacer(),
-              SizedBox(
-                height: 26,
-                child: OutlinedButton(
-                  onPressed: _checkingUpdate ? null : _handleCheckUpdate,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    side: const BorderSide(color: Color(0xFFE5E5EA), width: 0.5),
-                    backgroundColor: const Color(0xFFF2F2F7),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
-                  ),
-                  child: _checkingUpdate
-                      ? const SizedBox(
-                          width: 11,
-                          height: 11,
-                          child: CircularProgressIndicator(strokeWidth: 1.8),
-                        )
-                      : Text(
-                          '检查更新',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.primary,
-                          ),
-                        ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '绝对时刻',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '版本 v$version',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: _checkingUpdate ? null : _handleCheckUpdate,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                icon: _checkingUpdate
+                    ? const SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Icon(Icons.system_update_alt_rounded, size: 14, color: AppColors.primary),
+                label: Text(
+                  _checkingUpdate ? '检查中…' : '检查更新',
+                  style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
-          _buildAppleRow('核心功能', '像打怪闯关一样学现代 C++（38 个精选关卡）'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('解决痛点', '告别死记八股与 AI 喂饭，带你真正搞懂内存与底层原理'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('GitHub', 'github.com/dstweihao/dst-absolute-moment-app'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('个人网站', 'https://dstweihao.cn'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('微信公众号', '码上生长'),
+          const SizedBox(height: 18),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const SizedBox(height: 14),
+          _buildInfoRow(
+            icon: Icons.sports_esports_rounded,
+            label: '核心功能',
+            value: '像打怪闯关一样学现代 C++（38 个精选关卡）',
+            isClickable: false,
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            icon: Icons.lightbulb_outline_rounded,
+            label: '解决痛点',
+            value: '告别死记八股与 AI 喂饭，带你真正搞懂底层机制',
+            isClickable: false,
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            icon: Icons.link_rounded,
+            label: 'GitHub',
+            value: 'github.com/dstweihao',
+            copyContent: 'https://github.com/dstweihao',
+            onTap: () => _openUrl('https://github.com/dstweihao'),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            icon: Icons.language_rounded,
+            label: '个人网站',
+            value: 'https://dstweihao.cn',
+            copyContent: 'https://dstweihao.cn',
+            onTap: () => _openUrl('https://dstweihao.cn'),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(
+            icon: Icons.campaign_rounded,
+            label: '微信公众号',
+            value: '码上生长 (点击或长按复制)',
+            copyContent: '码上生长',
+            actionIcon: Icons.copy_rounded,
+            onTap: () => _copyText('码上生长', '已复制微信公众号：码上生长'),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAppleRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7.5),
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    String? copyContent,
+    VoidCallback? onTap,
+    IconData actionIcon = Icons.open_in_new_rounded,
+    bool isClickable = true,
+  }) {
+    final toCopy = copyContent ?? value;
+    final rowContent = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 16, color: const Color(0xFF64748B)),
+          const SizedBox(width: 8),
           SizedBox(
-            width: 76,
+            width: 72,
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF8E8E93),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF1C1C1E),
+              style: TextStyle(
+                fontSize: 13,
+                color: isClickable ? AppColors.primary : const Color(0xFF1E293B),
+                decoration: isClickable ? TextDecoration.underline : TextDecoration.none,
                 height: 1.35,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (isClickable) ...[
+            const SizedBox(width: 4),
+            Icon(actionIcon, size: 14, color: AppColors.primary),
+          ],
         ],
       ),
+    );
+
+    return InkWell(
+      onTap: onTap ?? (isClickable ? () => _copyText(toCopy, '已复制 $label：$toCopy') : null),
+      onLongPress: () => _copyText(toCopy, '已复制 $label：$toCopy'),
+      borderRadius: BorderRadius.circular(8),
+      child: rowContent,
     );
   }
 
@@ -850,12 +959,12 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                Icon(Icons.system_update_rounded, color: AppColors.primary, size: 20),
+                Icon(Icons.system_update_rounded, color: AppColors.primary, size: 22),
                 const SizedBox(width: 8),
-                Text('发现新版本 ${release.tagName}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                Text('发现新版本 ${release.tagName}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
               ],
             ),
             content: Column(
@@ -864,51 +973,51 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
               children: [
                 Text(
                   '当前版本 v$current，最新发布 ${release.tagName}',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
                 ),
                 if (release.notes.trim().isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Container(
                     width: double.infinity,
-                    constraints: const BoxConstraints(maxHeight: 120),
-                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(maxHeight: 140),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: SingleChildScrollView(
                       child: Text(
                         release.notes.trim(),
-                        style: const TextStyle(fontSize: 11, color: Color(0xFF334155)),
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF334155), height: 1.4),
                       ),
                     ),
                   ),
                 ],
                 if (downloading) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: downloadProgress,
-                      minHeight: 5,
+                      minHeight: 6,
                       backgroundColor: const Color(0xFFF1F5F9),
                       valueColor: AlwaysStoppedAnimation(AppColors.primary),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     downloadProgress != null
                         ? '正在下载 ${(downloadProgress! * 100).toStringAsFixed(0)}%…'
                         : '正在连接下载源…',
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                   ),
                 ],
                 if (errorMsg != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     errorMsg!,
-                    style: const TextStyle(fontSize: 11, color: Color(0xFFEF4444)),
+                    style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444)),
                   ),
                 ],
               ],
@@ -962,6 +1071,22 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
           );
         },
       ),
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _copyText(String text, String tip) {
+    Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    _showCenteredDialog(
+      title: '已复制',
+      message: tip,
     );
   }
 }

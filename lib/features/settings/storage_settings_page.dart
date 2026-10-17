@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -140,7 +142,7 @@ class _StorageSettingsPageState extends ConsumerState<StorageSettingsPage> {
   }
 
   // ------------------------------------------------------------------
-  // 外观
+  // 外观与配置
   // ------------------------------------------------------------------
 
   Widget _aiSection() {
@@ -161,12 +163,13 @@ class _StorageSettingsPageState extends ConsumerState<StorageSettingsPage> {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            '配好之后，拆塔官会在七阶段里拷问你的答案。'
-            '不配置也能走完闭环 —— 只是转为纯自评。',
+            '配好之后，AI 导师会带你逐关推导。'
+            '不配置也能走完闭环 —— 只是转为纯自评模式。',
             style: AppTypography.caption,
           ),
           const SizedBox(height: AppSpacing.md),
           _kv('当前状态', ready ? '已配置 · ${settings.model}' : '未配置'),
+          const SizedBox(height: AppSpacing.sm),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -191,66 +194,89 @@ class _StorageSettingsPageState extends ConsumerState<StorageSettingsPage> {
           Row(
             children: [
               Container(
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(7),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF165DFF).withValues(alpha: 0.22),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.16)),
                 ),
-                child: const AppLogo(size: 28),
+                alignment: Alignment.center,
+                child: const AppLogo(size: 26),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Text(
-                          '绝对时刻',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1C1C1E),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '版本 $version',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Color(0xFF8E8E93),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
+                    const Text(
+                      '绝对时刻',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '版本 v$version',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF64748B),
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
-          _buildAppleRow('核心功能', '像打怪闯关一样学现代 C++（38 个精选关卡）'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('解决痛点', '告别死记八股与 AI 喂饭，带你真正搞懂内存与底层原理'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('GitHub', 'github.com/dstweihao/dst-absolute-moment-app'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('个人网站', 'https://dstweihao.cn'),
-          const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
-          _buildAppleRow('微信公众号', '码上生长'),
+          const SizedBox(height: 18),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          const SizedBox(height: 14),
+          _interactiveItem(
+            icon: Icons.sports_esports_rounded,
+            label: '核心功能',
+            value: '像打怪闯关一样学现代 C++（38 个精选关卡）',
+            isClickable: false,
+          ),
           const SizedBox(height: 12),
+          _interactiveItem(
+            icon: Icons.lightbulb_outline_rounded,
+            label: '解决痛点',
+            value: '告别死记八股与 AI 喂饭，带你真正搞懂底层机制',
+            isClickable: false,
+          ),
+          const SizedBox(height: 12),
+          _interactiveItem(
+            icon: Icons.link_rounded,
+            label: 'GitHub',
+            value: 'github.com/dstweihao',
+            copyContent: 'https://github.com/dstweihao',
+            onTap: () => _openUrl('https://github.com/dstweihao'),
+          ),
+          const SizedBox(height: 12),
+          _interactiveItem(
+            icon: Icons.language_rounded,
+            label: '个人网站',
+            value: 'https://dstweihao.cn',
+            copyContent: 'https://dstweihao.cn',
+            onTap: () => _openUrl('https://dstweihao.cn'),
+          ),
+          const SizedBox(height: 12),
+          _interactiveItem(
+            icon: Icons.campaign_rounded,
+            label: '微信公众号',
+            value: '码上生长 (点击或长按复制)',
+            copyContent: '码上生长',
+            actionIcon: Icons.copy_rounded,
+            onTap: () => _copyText('码上生长', '已复制微信公众号：码上生长'),
+          ),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => context.push(AppRouter.update),
-              icon: const Icon(Icons.sync_rounded, size: 16),
+              icon: const Icon(Icons.system_update_alt_rounded, size: 18),
               label: const Text('检查版本更新'),
             ),
           ),
@@ -259,61 +285,147 @@ class _StorageSettingsPageState extends ConsumerState<StorageSettingsPage> {
     );
   }
 
-  Widget _buildAppleRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7.5),
+  Widget _interactiveItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    String? copyContent,
+    VoidCallback? onTap,
+    IconData actionIcon = Icons.open_in_new_rounded,
+    bool isClickable = true,
+  }) {
+    final toCopy = copyContent ?? value;
+    final rowContent = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 16, color: const Color(0xFF64748B)),
+          const SizedBox(width: 8),
           SizedBox(
-            width: 76,
+            width: 72,
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF8E8E93),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF64748B),
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF1C1C1E),
+              style: TextStyle(
+                fontSize: 13,
+                color: isClickable ? AppColors.primary : const Color(0xFF1E293B),
+                decoration: isClickable ? TextDecoration.underline : TextDecoration.none,
                 height: 1.35,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (isClickable) ...[
+            const SizedBox(width: 4),
+            Icon(actionIcon, size: 14, color: AppColors.primary),
+          ],
         ],
       ),
     );
+
+    return InkWell(
+      onTap: onTap ?? (isClickable ? () => _copyText(toCopy, '已复制 $label：$toCopy') : null),
+      onLongPress: () => _copyText(toCopy, '已复制 $label：$toCopy'),
+      borderRadius: BorderRadius.circular(8),
+      child: rowContent,
+    );
   }
-
-
-
 
   Widget _kv(String k, String v) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 80,
             child: Text(k, style: AppTypography.caption),
           ),
           Expanded(
-            child: Text(
-              v,
-              style: AppTypography.body.copyWith(fontSize: 14),
-            ),
+            child: Text(v, style: AppTypography.body),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _copyText(String text, String tip) {
+    Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 8,
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFDCFCE7),
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 24,
+                  color: Color(0xFF10B981),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '已复制',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                tip,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
+                  child: const Text('知道了', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
