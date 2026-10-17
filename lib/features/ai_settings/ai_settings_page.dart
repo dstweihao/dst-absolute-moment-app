@@ -760,7 +760,7 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
           ),
           const SizedBox(height: 10),
           const Divider(height: 1, thickness: 0.5, color: Color(0xFFE5E5EA)),
-          _buildAppleRow('项目简介', '现代 C++ 交互式底层推导工作台'),
+          _buildAppleRow('项目简介', '现代 C++ 闯关式 AI 学习助手'),
           const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
           _buildAppleRow('GitHub', 'github.com/dstweihao/dst-absolute-moment-app'),
           const Divider(height: 1, thickness: 0.5, color: Color(0xFFF2F2F7)),
