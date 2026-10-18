@@ -19,6 +19,7 @@ import '../../providers.dart';
 import '../../router.dart';
 import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/app_toast.dart';
+import '../../data/speech/speech_recognition_service.dart';
 
 class LearnPage extends ConsumerStatefulWidget {
   const LearnPage({super.key});
@@ -43,6 +44,8 @@ class _LearnPageState extends ConsumerState<LearnPage> {
   Node? _currentNode;
   double _nodeProgress = 0.0; // 0.0 ~ 1.0
   bool _isRecordingVoice = false;
+  String _preVoiceText = '';
+  double _currentSoundLevel = 0.0;
 
   @override
   void initState() {
@@ -52,6 +55,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
 
   @override
   void dispose() {
+    SpeechRecognitionService.instance.cancel();
     _subscription?.cancel();
     _input.dispose();
     _scroll.dispose();
@@ -839,10 +843,74 @@ class _LearnPageState extends ConsumerState<LearnPage> {
     }
 
     if (!mounted) return;
-    setState(() => _isRecordingVoice = true);
+
+    // 记录说话前已有文字
+    _preVoiceText = _input.text;
+
+    // 启动原生语音识别服务
+    final started = await SpeechRecognitionService.instance.startListening(
+      onResult: (words, isFinal) {
+        if (!mounted) return;
+        setState(() {
+          final prefix = _preVoiceText.isEmpty ? '' : '$_preVoiceText ';
+          _input.text = '$prefix$words';
+          _input.selection = TextSelection.fromPosition(
+            TextPosition(offset: _input.text.length),
+          );
+        });
+      },
+      onSoundLevel: (level) {
+        if (!mounted) return;
+        setState(() {
+          _currentSoundLevel = level;
+        });
+      },
+      onDone: () {
+        if (!mounted) return;
+        setState(() => _isRecordingVoice = false);
+      },
+      onError: (msg) {
+        if (!mounted) return;
+        setState(() => _isRecordingVoice = false);
+        AppToast.show(
+          context,
+          icon: Icons.mic_off_rounded,
+          iconColor: AppColors.danger,
+          iconBgColor: const Color(0xFFFEE2E2),
+          title: '语音识别不可用',
+          detail: msg,
+        );
+      },
+    );
+
+    if (started && mounted) {
+      setState(() => _isRecordingVoice = true);
+    }
   }
 
-  /// DeepSeek 风格极简原地录音栏（波形声浪、取消、完成）
+  Future<void> _cancelVoiceRecording() async {
+    await SpeechRecognitionService.instance.cancel();
+    if (!mounted) return;
+    setState(() {
+      _input.text = _preVoiceText;
+      _isRecordingVoice = false;
+      _currentSoundLevel = 0.0;
+    });
+  }
+
+  Future<void> _finishVoiceRecording(List<Node> allNodes) async {
+    await SpeechRecognitionService.instance.stop();
+    if (!mounted) return;
+    setState(() {
+      _isRecordingVoice = false;
+      _currentSoundLevel = 0.0;
+    });
+    if (_input.text.trim().isNotEmpty) {
+      _sendText(null, allNodes);
+    }
+  }
+
+  /// DeepSeek 风格极简原地录音栏（实时波形声浪、取消、完成）
   Widget _buildDeepSeekVoiceBar(Node? node, List<Node> allNodes) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 6, 16, 16),
@@ -864,7 +932,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
         children: [
           // 左侧：取消录音
           InkWell(
-            onTap: () => setState(() => _isRecordingVoice = false),
+            onTap: _cancelVoiceRecording,
             borderRadius: BorderRadius.circular(20),
             child: Container(
               width: 40,
@@ -879,13 +947,13 @@ class _LearnPageState extends ConsumerState<LearnPage> {
           ),
           const SizedBox(width: 10),
           // 中间：DeepSeek 律动动态声波条与正在聆听
-          const Expanded(
+          Expanded(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _DeepSeekWaveBars(),
-                SizedBox(width: 10),
-                Text(
+                _DeepSeekWaveBars(soundLevel: _currentSoundLevel),
+                const SizedBox(width: 10),
+                const Text(
                   '正在聆听推导…',
                   style: TextStyle(
                     fontSize: 14,
@@ -899,12 +967,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
           const SizedBox(width: 8),
           // 右侧：完成发送按钮
           InkWell(
-            onTap: () {
-              setState(() => _isRecordingVoice = false);
-              if (_input.text.trim().isNotEmpty) {
-                _sendText(null, allNodes);
-              }
-            },
+            onTap: () => _finishVoiceRecording(allNodes),
             borderRadius: BorderRadius.circular(20),
             child: Container(
               width: 40,
@@ -1498,7 +1561,8 @@ $base
 
 /// DeepSeek 风格极简灵动声波动画（4 根跳动音柱）
 class _DeepSeekWaveBars extends StatefulWidget {
-  const _DeepSeekWaveBars();
+  final double soundLevel;
+  const _DeepSeekWaveBars({this.soundLevel = 0.0});
 
   @override
   State<_DeepSeekWaveBars> createState() => _DeepSeekWaveBarsState();
@@ -1529,16 +1593,17 @@ class _DeepSeekWaveBarsState extends State<_DeepSeekWaveBars>
       animation: _controller,
       builder: (ctx, _) {
         final val = _controller.value;
+        final boost = (widget.soundLevel.clamp(0.0, 10.0) / 10.0) * 8.0;
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _bar(8 + val * 8),
+            _bar(6 + val * 8 + boost * 0.8),
             const SizedBox(width: 3),
-            _bar(16 - val * 8),
+            _bar(14 - val * 8 + boost * 1.2),
             const SizedBox(width: 3),
-            _bar(10 + val * 10),
+            _bar(8 + val * 10 + boost * 1.5),
             const SizedBox(width: 3),
-            _bar(18 - val * 9),
+            _bar(16 - val * 9 + boost * 0.9),
           ],
         );
       },
@@ -1548,7 +1613,7 @@ class _DeepSeekWaveBarsState extends State<_DeepSeekWaveBars>
   Widget _bar(double height) {
     return Container(
       width: 3.5,
-      height: height.clamp(4.0, 20.0),
+      height: height.clamp(4.0, 24.0),
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(2),
