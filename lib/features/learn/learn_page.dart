@@ -18,6 +18,7 @@ import '../../domain/models/node.dart';
 import '../../providers.dart';
 import '../../router.dart';
 import '../../shared/widgets/app_logo.dart';
+import '../../shared/widgets/app_toast.dart';
 
 class LearnPage extends ConsumerStatefulWidget {
   const LearnPage({super.key});
@@ -557,12 +558,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
                         InkWell(
                           onTap: () {
                             Clipboard.setData(ClipboardData(text: cleanContent));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('已复制内容至剪贴板'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
+                            AppToast.showCopied(context, message: '已复制内容到剪贴板');
                           },
                           borderRadius: BorderRadius.circular(6),
                           child: Padding(
@@ -712,7 +708,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
           ),
           const SizedBox(width: 8),
           InkWell(
-            onTap: () => setState(() => _isRecordingVoice = true),
+            onTap: _handleMicTapped,
             borderRadius: BorderRadius.circular(20),
             child: const SizedBox(
               width: 40,
@@ -750,6 +746,100 @@ class _LearnPageState extends ConsumerState<LearnPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleMicTapped() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasAgreed = prefs.getBool('has_agreed_mic_permission') ?? false;
+
+    if (!hasAgreed) {
+      if (!mounted) return;
+      final agreed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                  ),
+                  child: Icon(Icons.mic_rounded, size: 26, color: AppColors.primary),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '麦克风权限使用说明',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '为了支持通过语音口头推导思路并转换为文字作答，绝对时刻需要使用您的设备麦克风。\n\n• 仅在您主动录音时采集音频\n• 音频仅在本地流式识别，不作任何云端存档\n• 您可以随时在系统应用权限中关闭授权',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF64748B),
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 40,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFCBD5E1)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Text('暂不开启', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: SizedBox(
+                        height: 40,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 0,
+                          ),
+                          child: const Text('同意并继续', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      if (agreed != true) {
+        return;
+      }
+      await prefs.setBool('has_agreed_mic_permission', true);
+    }
+
+    if (!mounted) return;
+    setState(() => _isRecordingVoice = true);
   }
 
   /// DeepSeek 风格极简原地录音栏（波形声浪、取消、完成）

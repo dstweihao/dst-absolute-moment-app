@@ -17,6 +17,7 @@ import '../../domain/models/update_info.dart';
 import '../../providers.dart';
 import '../../router.dart';
 import '../../shared/widgets/app_logo.dart';
+import '../../shared/widgets/app_toast.dart';
 import '../../shared/widgets/back_leading.dart';
 
 class AiSettingsPage extends ConsumerStatefulWidget {
@@ -104,6 +105,36 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Center(
+              child: SizedBox(
+                height: 32,
+                child: ElevatedButton(
+                  onPressed: _busy ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    elevation: 0,
+                  ),
+                  child: _busy
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text(
+                          '保存',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -119,31 +150,6 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
             _buildSectionHeader('API Key 设置', Icons.key_rounded),
             const SizedBox(height: 12),
             _buildKeyCard(modelName),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _busy ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: _busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text(
-                        '保存',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                      ),
-              ),
-            ),
             const SizedBox(height: 28),
 
             // 第三部分：作者与项目信息
@@ -638,9 +644,10 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         ..invalidate(aiApiKeyProvider);
 
       if (!mounted) return;
-      _showCenteredDialog(
+      AppToast.showSuccess(
+        context,
         title: '保存成功',
-        message: 'API Key 与模型配置已生效',
+        detail: 'API Key 与模型配置已生效',
       );
       _fetchDeepSeekBalance(key);
     } catch (e) {
@@ -741,7 +748,7 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
 
   Widget _buildAuthorCard(String version) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -758,102 +765,94 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.16)),
-                ),
-                alignment: Alignment.center,
-                child: const AppLogo(size: 26),
-              ),
-              const SizedBox(width: 14),
+              const AppLogo(size: 40),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '绝对时刻',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
-                      ),
+                    Row(
+                      children: [
+                        const Text(
+                          '绝对时刻',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'v$version',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '版本 v$version',
-                      style: const TextStyle(
-                        fontSize: 13,
+                    const SizedBox(height: 4),
+                    const Text(
+                      '现代 C++ 机制推导与自测台',
+                      style: TextStyle(
+                        fontSize: 12.5,
                         color: Color(0xFF64748B),
+                        height: 1.35,
                       ),
                     ),
                   ],
                 ),
               ),
-              OutlinedButton.icon(
-                onPressed: _checkingUpdate ? null : _handleCheckUpdate,
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                icon: _checkingUpdate
-                    ? const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(Icons.system_update_alt_rounded, size: 14, color: AppColors.primary),
-                label: Text(
-                  _checkingUpdate ? '检查中…' : '检查更新',
-                  style: TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w600),
+              const SizedBox(width: 8),
+              SizedBox(
+                height: 28,
+                child: OutlinedButton(
+                  onPressed: _checkingUpdate ? null : _handleCheckUpdate,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    backgroundColor: const Color(0xFFF8FAFC),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    elevation: 0,
+                  ),
+                  child: _checkingUpdate
+                      ? const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          '检查更新',
+                          style: TextStyle(fontSize: 11.5, color: AppColors.primary, fontWeight: FontWeight.w600),
+                        ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 10),
           _buildInfoRow(
-            icon: Icons.sports_esports_rounded,
-            label: '核心功能',
-            value: '像打怪闯关一样学现代 C++（38 个精选关卡）',
-            isClickable: false,
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.lightbulb_outline_rounded,
-            label: '解决痛点',
-            value: '告别死记八股与 AI 喂饭，带你真正搞懂底层机制',
-            isClickable: false,
-          ),
-          const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.link_rounded,
             label: 'GitHub',
             value: 'github.com/dstweihao',
             copyContent: 'https://github.com/dstweihao',
             onTap: () => _openUrl('https://github.com/dstweihao'),
           ),
-          const SizedBox(height: 12),
+          const Divider(height: 14, color: Color(0xFFF8FAFC)),
           _buildInfoRow(
-            icon: Icons.language_rounded,
             label: '个人网站',
             value: 'https://dstweihao.cn',
             copyContent: 'https://dstweihao.cn',
             onTap: () => _openUrl('https://dstweihao.cn'),
           ),
-          const SizedBox(height: 12),
+          const Divider(height: 14, color: Color(0xFFF8FAFC)),
           _buildInfoRow(
-            icon: Icons.campaign_rounded,
             label: '微信公众号',
-            value: '码上生长 (点击或长按复制)',
+            value: '码上生长',
             copyContent: '码上生长',
-            actionIcon: Icons.copy_rounded,
             onTap: () => _copyText('码上生长', '已复制微信公众号：码上生长'),
           ),
         ],
@@ -862,59 +861,46 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
   }
 
   Widget _buildInfoRow({
-    required IconData icon,
     required String label,
     required String value,
     String? copyContent,
     VoidCallback? onTap,
-    IconData actionIcon = Icons.open_in_new_rounded,
-    bool isClickable = true,
   }) {
     final toCopy = copyContent ?? value;
-    final rowContent = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF64748B)),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 72,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 13,
-                color: isClickable ? AppColors.primary : const Color(0xFF1E293B),
-                decoration: isClickable ? TextDecoration.underline : TextDecoration.none,
-                height: 1.35,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (isClickable) ...[
-            const SizedBox(width: 4),
-            Icon(actionIcon, size: 14, color: AppColors.primary),
-          ],
-        ],
-      ),
-    );
-
     return InkWell(
-      onTap: onTap ?? (isClickable ? () => _copyText(toCopy, '已复制 $label：$toCopy') : null),
+      onTap: onTap,
       onLongPress: () => _copyText(toCopy, '已复制 $label：$toCopy'),
-      borderRadius: BorderRadius.circular(8),
-      child: rowContent,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 2),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 76,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF1E293B),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1084,9 +1070,6 @@ class _AiSettingsPageState extends ConsumerState<AiSettingsPage> {
   void _copyText(String text, String tip) {
     Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
-    _showCenteredDialog(
-      title: '已复制',
-      message: tip,
-    );
+    AppToast.showCopied(context, message: tip);
   }
 }

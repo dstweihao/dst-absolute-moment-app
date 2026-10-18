@@ -68,6 +68,8 @@ void main() {
 
     final saveBtn = find.text('保存');
     await tester.tap(saveBtn);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
 
     expect(secrets.saved, equals('sk-new-valid-key'));
