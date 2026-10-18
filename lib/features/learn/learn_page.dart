@@ -19,7 +19,6 @@ import '../../providers.dart';
 import '../../router.dart';
 import '../../shared/widgets/app_logo.dart';
 import '../../shared/widgets/app_toast.dart';
-import '../../data/speech/speech_recognition_service.dart';
 
 class LearnPage extends ConsumerStatefulWidget {
   const LearnPage({super.key});
@@ -43,10 +42,6 @@ class _LearnPageState extends ConsumerState<LearnPage> {
   final Map<String, double> _nodeProgressMap = {};
   Node? _currentNode;
   double _nodeProgress = 0.0; // 0.0 ~ 1.0
-  bool _isRecordingVoice = false;
-  String _preVoiceText = '';
-  double _currentSoundLevel = 0.0;
-
   @override
   void initState() {
     super.initState();
@@ -55,7 +50,6 @@ class _LearnPageState extends ConsumerState<LearnPage> {
 
   @override
   void dispose() {
-    SpeechRecognitionService.instance.cancel();
     _subscription?.cancel();
     _input.dispose();
     _scroll.dispose();
@@ -662,14 +656,10 @@ class _LearnPageState extends ConsumerState<LearnPage> {
   }
 
   // ------------------------------------------------------------------
-  // 底部极简科技输入卡片（普通输入 / DeepSeek 原地录音栏）
+  // 底部极简科技输入卡片（原生键盘/输入法语音直达）
   // ------------------------------------------------------------------
 
   Widget _buildModernInputCard(Node? node, List<Node> allNodes) {
-    if (_isRecordingVoice) {
-      return _buildDeepSeekVoiceBar(node, allNodes);
-    }
-
     final hasText = _input.text.trim().isNotEmpty;
 
     return Container(
@@ -712,20 +702,6 @@ class _LearnPageState extends ConsumerState<LearnPage> {
           ),
           const SizedBox(width: 8),
           InkWell(
-            onTap: _handleMicTapped,
-            borderRadius: BorderRadius.circular(20),
-            child: const SizedBox(
-              width: 40,
-              height: 40,
-              child: Icon(
-                Icons.mic_none_rounded,
-                size: 22,
-                color: Color(0xFF64748B),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
             onTap: _busy
                 ? _cancel
                 : (hasText ? () => _sendText(null, allNodes) : null),
@@ -745,320 +721,6 @@ class _LearnPageState extends ConsumerState<LearnPage> {
                 size: 20,
                 color: _busy || hasText ? Colors.white : const Color(0xFF94A3B8),
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleMicTapped() async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasAgreed = prefs.getBool('has_agreed_mic_permission') ?? false;
-
-    if (!hasAgreed) {
-      if (!mounted) return;
-      final agreed = await showDialog<bool>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-          backgroundColor: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                  ),
-                  child: Icon(Icons.mic_rounded, size: 26, color: AppColors.primary),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  '麦克风权限使用说明',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '为了支持通过语音口头推导思路并转换为文字作答，绝对时刻需要使用您的设备麦克风。\n\n• 仅在您主动录音时采集音频\n• 音频仅在本地流式识别，不作任何云端存档\n• 您可以随时在系统应用权限中关闭授权',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF64748B),
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 22),
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 40,
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(ctx).pop(false),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFFCBD5E1)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Text('暂不开启', style: TextStyle(color: Color(0xFF64748B), fontSize: 13)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: 40,
-                        child: ElevatedButton(
-                          onPressed: () => Navigator.of(ctx).pop(true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 0,
-                          ),
-                          child: const Text('同意并继续', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      if (agreed != true) {
-        return;
-      }
-      await prefs.setBool('has_agreed_mic_permission', true);
-    }
-
-    if (!mounted) return;
-
-    // 记录说话前已有文字
-    _preVoiceText = _input.text;
-
-    // 启动原生语音识别服务
-    final started = await SpeechRecognitionService.instance.startListening(
-      onResult: (words, isFinal) {
-        if (!mounted) return;
-        setState(() {
-          final prefix = _preVoiceText.isEmpty ? '' : '$_preVoiceText ';
-          _input.text = '$prefix$words';
-          _input.selection = TextSelection.fromPosition(
-            TextPosition(offset: _input.text.length),
-          );
-        });
-      },
-      onSoundLevel: (level) {
-        if (!mounted) return;
-        setState(() {
-          _currentSoundLevel = level;
-        });
-      },
-      onDone: () {
-        if (!mounted) return;
-        setState(() => _isRecordingVoice = false);
-      },
-      onError: (msg) {
-        if (!mounted) return;
-        setState(() => _isRecordingVoice = false);
-        _showVoiceGuidanceDialog(msg);
-      },
-    );
-
-    if (started && mounted) {
-      setState(() => _isRecordingVoice = true);
-    }
-  }
-
-  Future<void> _cancelVoiceRecording() async {
-    await SpeechRecognitionService.instance.cancel();
-    if (!mounted) return;
-    setState(() {
-      _input.text = _preVoiceText;
-      _isRecordingVoice = false;
-      _currentSoundLevel = 0.0;
-    });
-  }
-
-  Future<void> _finishVoiceRecording(List<Node> allNodes) async {
-    await SpeechRecognitionService.instance.stop();
-    if (!mounted) return;
-    setState(() {
-      _isRecordingVoice = false;
-      _currentSoundLevel = 0.0;
-    });
-    if (_input.text.trim().isNotEmpty) {
-      _sendText(null, allNodes);
-    }
-  }
-
-  void _showVoiceGuidanceDialog(String detail) {
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFFEF3C7),
-                ),
-                child: const Icon(
-                  Icons.tips_and_updates_rounded,
-                  size: 26,
-                  color: Color(0xFFD97706),
-                ),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                '系统语音听写未就绪',
-                style: TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                detail,
-                textAlign: TextAlign.left,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF64748B),
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.keyboard_outlined, size: 20, color: Color(0xFF64748B)),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '💡 提示：直接长按键盘自带语音键（微信输入法/搜狗等）可秒出字，免系统配置',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF475569)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 38,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text('我知道了', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// DeepSeek 风格极简原地录音栏（实时波形声浪、取消、完成）
-  Widget _buildDeepSeekVoiceBar(Node? node, List<Node> allNodes) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 6, 16, 16),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.primary, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // 左侧：取消录音
-          InkWell(
-            onTap: _cancelVoiceRecording,
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          // 中间：DeepSeek 律动动态声波条与正在聆听
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _DeepSeekWaveBars(soundLevel: _currentSoundLevel),
-                const SizedBox(width: 10),
-                const Text(
-                  '正在聆听推导…',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // 右侧：完成发送按钮
-          InkWell(
-            onTap: () => _finishVoiceRecording(allNodes),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded, size: 20, color: Colors.white),
             ),
           ),
         ],
@@ -1640,68 +1302,6 @@ $base
   }
 }
 
-/// DeepSeek 风格极简灵动声波动画（4 根跳动音柱）
-class _DeepSeekWaveBars extends StatefulWidget {
-  final double soundLevel;
-  const _DeepSeekWaveBars({this.soundLevel = 0.0});
-
-  @override
-  State<_DeepSeekWaveBars> createState() => _DeepSeekWaveBarsState();
-}
-
-class _DeepSeekWaveBarsState extends State<_DeepSeekWaveBars>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (ctx, _) {
-        final val = _controller.value;
-        final boost = (widget.soundLevel.clamp(0.0, 10.0) / 10.0) * 8.0;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _bar(6 + val * 8 + boost * 0.8),
-            const SizedBox(width: 3),
-            _bar(14 - val * 8 + boost * 1.2),
-            const SizedBox(width: 3),
-            _bar(8 + val * 10 + boost * 1.5),
-            const SizedBox(width: 3),
-            _bar(16 - val * 9 + boost * 0.9),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _bar(double height) {
-    return Container(
-      width: 3.5,
-      height: height.clamp(4.0, 24.0),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-}
 
 class _DeepSeekThinkingCard extends StatefulWidget {
   final String thinking;

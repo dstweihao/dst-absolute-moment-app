@@ -30,9 +30,5 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>绝对时刻需要访问麦克风以支持语音输入推导思路</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>绝对时刻需要语音识别权限以将您的语音推导实时转换为文字</string>
 </dict>
 </plist>
