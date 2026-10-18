@@ -71,10 +71,15 @@ class SpeechRecognitionService {
     }
 
     try {
+      final locales = await _speech.locales();
+      if (locales.isEmpty) {
+        onError?.call('系统听写服务未就绪。macOS 请在【系统设置 ➔ 键盘 ➔ 听写】打开听写并勾选中文普通话，或直接使用输入法语音键');
+        return false;
+      }
+
       // 优先探测是否有中文 locale
       var targetLocale = localeId;
       if (targetLocale == null) {
-        final locales = await _speech.locales();
         final hasZh = locales.any((l) => l.localeId.startsWith('zh'));
         if (hasZh) {
           final zhCn = locales.firstWhere(
@@ -82,6 +87,8 @@ class SpeechRecognitionService {
             orElse: () => locales.first,
           );
           targetLocale = zhCn.localeId;
+        } else {
+          targetLocale = locales.first.localeId;
         }
       }
 

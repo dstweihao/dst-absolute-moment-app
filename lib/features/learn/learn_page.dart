@@ -872,14 +872,7 @@ class _LearnPageState extends ConsumerState<LearnPage> {
       onError: (msg) {
         if (!mounted) return;
         setState(() => _isRecordingVoice = false);
-        AppToast.show(
-          context,
-          icon: Icons.mic_off_rounded,
-          iconColor: AppColors.danger,
-          iconBgColor: const Color(0xFFFEE2E2),
-          title: '语音识别不可用',
-          detail: msg,
-        );
+        _showVoiceGuidanceDialog(msg);
       },
     );
 
@@ -908,6 +901,94 @@ class _LearnPageState extends ConsumerState<LearnPage> {
     if (_input.text.trim().isNotEmpty) {
       _sendText(null, allNodes);
     }
+  }
+
+  void _showVoiceGuidanceDialog(String detail) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFFFEF3C7),
+                ),
+                child: const Icon(
+                  Icons.tips_and_updates_rounded,
+                  size: 26,
+                  color: Color(0xFFD97706),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                '系统语音听写未就绪',
+                style: TextStyle(
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                detail,
+                textAlign: TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF64748B),
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.keyboard_outlined, size: 20, color: Color(0xFF64748B)),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '💡 提示：直接长按键盘自带语音键（微信输入法/搜狗等）可秒出字，免系统配置',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF475569)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 38,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('我知道了', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// DeepSeek 风格极简原地录音栏（实时波形声浪、取消、完成）
